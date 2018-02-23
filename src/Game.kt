@@ -3,8 +3,8 @@ import models.Player
 class Game(var gameState: GameState) {
 
     init {
-        (0 until 4).forEach { gameState.player1.takeCardFromDeck() }
-        (0 until 3).forEach { gameState.player2.takeCardFromDeck() }
+        (0 until 3).forEach { gameState.player1.takeCardFromDeck() }
+        (0 until 4).forEach { gameState.player2.takeCardFromDeck() }
     }
 
     fun run() {

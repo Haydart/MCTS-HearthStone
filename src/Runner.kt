@@ -7,28 +7,25 @@ import models.SpellCard
  * Created by r.makowiecki on 23/02/2018.
  */
 
-
-const val ADHERENTS_COUNT = 7
-
 fun main(args: Array<String>) {
 
     val player1 = Player(
             mutableListOf(),
             createInitialDeck(),
             mutableListOf(),
-            20,
-            0
+            healthPoints = 20,
+            mana = 0
     )
 
     val player2 = Player(
             mutableListOf(),
             createInitialDeck(),
             mutableListOf(),
-            20,
-            0
+            healthPoints = 20,
+            mana = 0
     )
 
-
+    Game(GameState(player1, player2, turnNumber = 0)).run()
 }
 
 fun createInitialDeck(): MutableList<Card> = mutableListOf<Card>().apply {
