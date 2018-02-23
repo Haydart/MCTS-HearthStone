@@ -1,6 +1,6 @@
 package models
 
-import models.Card
+import java.util.*
 
 /**
  * Created by r.makowiecki on 23/02/2018.
@@ -15,4 +15,8 @@ data class Player(
     init {
         println("models.Player initialized")
     }
+
+    fun takeCardFromDeck() = handCards.add(deckCards.takeRandomElement())
 }
+
+fun <E> MutableList<E>.takeRandomElement() = this.removeAt(Random().nextInt(this.size))
