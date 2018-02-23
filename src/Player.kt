@@ -1,3 +1,5 @@
+import models.Card
+
 /**
  * Created by r.makowiecki on 23/02/2018.
  */
@@ -8,5 +10,7 @@ class Player(
         var healthPoints: Int,
         var mana: Int
 ) {
-
+    init {
+        println("Player initialized")
+    }
 }
