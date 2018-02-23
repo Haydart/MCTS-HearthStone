@@ -1,5 +1,6 @@
 import models.AdherentCard
 import models.Card
+import models.Player
 import models.SpellCard
 
 /**
@@ -26,6 +27,8 @@ fun main(args: Array<String>) {
             20,
             0
     )
+
+
 }
 
 fun createInitialDeck(): MutableList<Card> = mutableListOf<Card>().apply {

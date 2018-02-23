@@ -1,9 +1,11 @@
+package models
+
 import models.Card
 
 /**
  * Created by r.makowiecki on 23/02/2018.
  */
-class Player(
+data class Player(
         val handCards: MutableList<Card>,
         val deckCards: MutableList<Card>,
         val tableCards: MutableList<Card>,
@@ -11,6 +13,6 @@ class Player(
         var mana: Int
 ) {
     init {
-        println("Player initialized")
+        println("models.Player initialized")
     }
 }
