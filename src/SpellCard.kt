@@ -1,0 +1,1 @@
+class SpellCard(name: String, manaCost: Int) : Card(name, manaCost)
