@@ -18,6 +18,7 @@ sealed class Action {
 
 sealed class AdherentCardAction : Action()
 sealed class SpellCardAction : Action() {
+    
     override fun resolve(gameState: GameState) {
         gameState.activePlayer.handCards.remove(triggeringCard)
         gameState.activePlayer.discardedCount++

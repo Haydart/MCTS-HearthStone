@@ -19,16 +19,17 @@ data class Player(
     var discardedCount = 0
 
     fun getAvailableActions(enemyPlayer: Player): List<Action> {
-        val availableActionsList = mutableListOf<Action>()
+        val actionsListBeforeConstraining = mutableListOf<Action>()
 
         handCards.forEach {
-            availableActionsList += it.getActionsFun(it, this, enemyPlayer)
+            actionsListBeforeConstraining += it.getActionsFun(it, this, enemyPlayer)
         }
         tableCards.forEach {
-            availableActionsList += it.getActionsFun(it, this, enemyPlayer)
+            actionsListBeforeConstraining += it.getActionsFun(it, this, enemyPlayer)
         }
 
-        return availableActionsList
+        return actionsListBeforeConstraining
+                .filter { mana >= it.triggeringCard.manaCost }
     }
 
     fun takeCardFromDeck() = handCards.add(deckCards.takeRandomElement())
