@@ -12,11 +12,17 @@ data class Player(
         var healthPoints: Int,
         var mana: Int
 ) {
-    init {
-        println("models.Player initialized")
-    }
+
+    var turnsWithDeckCardsDepleted = 0
 
     fun takeCardFromDeck() = handCards.add(deckCards.takeRandomElement())
+
+    fun deployRandomAdherentCard() {
+        tableCards.add(handCards.takeRandomElement())
+    }
+
+    override fun toString() = "deckCards: ${deckCards.size}, handCards: ${handCards.size}, tableCards: ${tableCards.size}"
 }
 
 fun <E> MutableList<E>.takeRandomElement() = this.removeAt(Random().nextInt(this.size))
+

@@ -1,3 +1,12 @@
 package models
 
-class SpellCard(name: String, manaCost: Int) : Card(name, manaCost)
+class SpellCard(
+        val applyEffectFun: (List<Card>) -> Unit,
+        name: String,
+        manaCost: Int
+) : Card(name, manaCost) {
+
+    fun applyEffect(tableCardsList: List<Card>) {
+        applyEffectFun(tableCardsList)
+    }
+}
