@@ -17,9 +17,10 @@ class Game(var gameState: GameState) {
     fun run() {
         with(gameState) {
             activePlayer = player1
+
             while (!gameEndConditionsMet()) {
-                performTurnIfConditionsMet(player1, player2)
-                activePlayer = if (activePlayer == player1) player2 else player1
+                performTurnIfConditionsMet(activePlayer, getOpponent(activePlayer))
+                activePlayer = getOpponent(activePlayer)
             }
 
             val winningPlayer = if (player1.healthPoints < player2.healthPoints) player2 else player1

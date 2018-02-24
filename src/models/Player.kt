@@ -15,9 +15,9 @@ data class Player(
 
     var turnsWithDeckCardsDepleted = 0
 
+    lateinit var availableActions: MutableList<Action>
+
     fun takeCardFromDeck() = handCards.add(deckCards.takeRandomElement())
-
-
 
     override fun toString() = "deckCards: ${deckCards.size}, handCards: ${handCards.size}, tableCards: ${tableCards.size}"
 }
