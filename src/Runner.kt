@@ -1,7 +1,4 @@
-import models.AdherentCard
-import models.Card
-import models.Player
-import models.SpellCard
+import models.*
 import java.util.*
 
 /**
@@ -39,19 +36,20 @@ fun createInitialDeck(): MutableList<Card> = mutableListOf<Card>().apply {
         add(AdherentCard(maxHealthPoints = 5, attackStrength = 2, manaCost = 3, name = "Public Defender"))
         add(AdherentCard(maxHealthPoints = 2, attackStrength = 3, manaCost = 1, name = "Murloc"))
 
-        add(SpellCard(name = "Flame Lance", manaCost = 4, applyEffectFun = flameLanceEffect))
-        add(SpellCard(name = "Dragon's Breath", manaCost = 5, applyEffectFun = dragonBreathEffect))
-        add(SpellCard(name = "Circle of Healing", manaCost = 0, applyEffectFun = circleOfHealingEffect))
+        add(SpellCard(name = "Flame Lance", manaCost = 4, getActionsFun = flameLanceEffect))
+        add(SpellCard(name = "Dragon's Breath", manaCost = 5, getActionsFun = dragonBreathEffect))
+        add(SpellCard(name = "Circle of Healing", manaCost = 0, getActionsFun = circleOfHealingEffect))
     }
 }
 
-val dragonBreathEffect: (Player, Player) -> Unit = { _, enemyPlayer ->
+val dragonBreathEffect: (SpellCard, Player, Player) -> List<Action> = { triggeringCard, _, enemyPlayer ->
     enemyPlayer.tableCards.forEach {
         it.currentHealthPoints -= 1
     }
+    listOf(Action.HitAllEnemies(triggeringCard))
 }
 
-val circleOfHealingEffect: (Player, Player) -> Unit = { currentPlayer, enemyPlayer ->
+val circleOfHealingEffect: (SpellCard, Player, Player) -> List<Action> = { triggeringCard, currentPlayer, enemyPlayer ->
     val allTableCards = mutableListOf<AdherentCard>()
     currentPlayer.tableCards.forEach { allTableCards.add(it) }
     enemyPlayer.tableCards.forEach { allTableCards.add(it) }
@@ -60,11 +58,15 @@ val circleOfHealingEffect: (Player, Player) -> Unit = { currentPlayer, enemyPlay
         it.currentHealthPoints += 1
         it.currentHealthPoints = maxOf(it.maxHealthPoints, it.currentHealthPoints)
     }
+    listOf(Action.HealAll(triggeringCard, 3))
 }
 
-val flameLanceEffect: (Player, Player) -> Unit = { _, enemyPlayer ->
-    val random = Random()
-    enemyPlayer.tableCards[random.nextInt(enemyPlayer.tableCards.size)]
+val flameLanceEffect: (SpellCard, Player, Player) -> List<Action> = { triggeringCard, _, enemyPlayer ->
+    val actionList = mutableListOf<Action>()
+    enemyPlayer.tableCards.forEach {
+        actionList.add(Action.HitOne(triggeringCard, it))
+    }
+    actionList
 }
 
 
