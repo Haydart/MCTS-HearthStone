@@ -2,6 +2,7 @@ import models.AdherentCard
 import models.Card
 import models.Player
 import models.SpellCard
+import java.util.*
 
 /**
  * Created by r.makowiecki on 23/02/2018.
@@ -42,6 +43,28 @@ fun createInitialDeck(): MutableList<Card> = mutableListOf<Card>().apply {
         add(SpellCard(name = "Dragon's Breath", manaCost = 5))
         add(SpellCard(name = "Circle of Healing", manaCost = 0))
     }
+}
+
+val dragonBreathEffect: (Player, Player) -> Unit = { _, enemyPlayer ->
+    enemyPlayer.tableCards.forEach {
+        (it as AdherentCard).currentHealthPoints -= 1
+    }
+}
+
+val circleOfHealingEffect: (Player, Player) -> Unit = { currentPlayer, enemyPlayer ->
+    val allTableCards = MutableList<AdherentCard>(currentPlayer.tableCards.size + enemyPlayer.tableCards.size) {}
+    currentPlayer.tableCards.forEach { allTableCards.add(it as AdherentCard) }
+    enemyPlayer.tableCards.forEach { allTableCards.add(it as AdherentCard) }
+
+    allTableCards.forEach {
+        it.currentHealthPoints += 1
+        it.currentHealthPoints = maxOf(it.maxHealthPoints, it.currentHealthPoints)
+    }
+}
+
+val flameLanceEffect: (Player, Player) -> Unit = { _, enemyPlayer ->
+    val random = Random()
+    enemyPlayer.tableCards[random.nextInt(enemyPlayer.tableCards.size)]
 }
 
 

@@ -8,7 +8,7 @@ import java.util.*
 data class Player(
         val handCards: MutableList<Card>,
         val deckCards: MutableList<Card>,
-        val tableCards: MutableList<Card>,
+        val tableCards: MutableList<AdherentCard>,
         var healthPoints: Int,
         var mana: Int
 ) {
@@ -17,9 +17,7 @@ data class Player(
 
     fun takeCardFromDeck() = handCards.add(deckCards.takeRandomElement())
 
-    fun deployRandomAdherentCard() {
-        tableCards.add(handCards.takeRandomElement())
-    }
+
 
     override fun toString() = "deckCards: ${deckCards.size}, handCards: ${handCards.size}, tableCards: ${tableCards.size}"
 }
