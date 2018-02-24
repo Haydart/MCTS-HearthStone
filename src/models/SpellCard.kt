@@ -1,5 +1,7 @@
 package models
 
+import actions.Action
+
 class SpellCard(
         name: String,
         manaCost: Int,

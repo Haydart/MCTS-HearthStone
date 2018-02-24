@@ -1,5 +1,7 @@
 package models
 
+import actions.Action
+
 val defaultAdherentActionsFun: (Card, Player, Player) -> List<Action> = { triggeringCard, (handCards), enemyPlayer ->
     val availableActions = mutableListOf<Action>()
     val isInHand = triggeringCard in handCards
