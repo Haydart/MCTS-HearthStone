@@ -12,19 +12,27 @@ typealias Index = Int
 
 sealed class Action {
     abstract val triggeringCard: Card
-    abstract fun resolve(gameState: GameState)
-    abstract fun rollback(gameState: GameState)
+
+    open fun resolve(gameState: GameState) {
+        gameState.activePlayer.mana -= triggeringCard.manaCost
+    }
+
+    open fun rollback(gameState: GameState) {
+        gameState.activePlayer.mana += triggeringCard.manaCost
+    }
 }
 
 sealed class AdherentCardAction : Action()
 sealed class SpellCardAction : Action() {
-    
+
     override fun resolve(gameState: GameState) {
+        super.resolve(gameState)
         gameState.activePlayer.handCards.remove(triggeringCard)
         gameState.activePlayer.discardedCount++
     }
 
     override fun rollback(gameState: GameState) {
+        super.rollback(gameState)
         gameState.activePlayer.handCards.add(triggeringCard)
         gameState.activePlayer.discardedCount--
     }
@@ -37,6 +45,7 @@ class DrawCard(override val triggeringCard: Card) : AdherentCardAction() {
     }
 
     override fun resolve(gameState: GameState) {
+        super.resolve(gameState)
         with(gameState.activePlayer) {
             tableCards.add(triggeringCard as AdherentCard)
             handCards.remove(triggeringCard)
@@ -44,6 +53,7 @@ class DrawCard(override val triggeringCard: Card) : AdherentCardAction() {
     }
 
     override fun rollback(gameState: GameState) {
+        super.rollback(gameState)
         with(gameState.activePlayer) {
             tableCards.remove(triggeringCard)
             handCards.add(triggeringCard)
@@ -57,6 +67,7 @@ class FightAnotherAdherent(override val triggeringCard: AdherentCard, val target
     var enemyPlayerKilledAdherent: Pair<Index, AdherentCard>? = null
 
     override fun resolve(gameState: GameState) = with(gameState) {
+        super.resolve(gameState)
         targetCard.currentHealthPoints -= triggeringCard.attackStrength
         triggeringCard.currentHealthPoints -= targetCard.attackStrength
 
@@ -75,7 +86,7 @@ class FightAnotherAdherent(override val triggeringCard: AdherentCard, val target
     }
 
     override fun rollback(gameState: GameState) = with(gameState) {
-
+        super.rollback(gameState)
         activePlayerKilledAdherent?.let { (index, adherentCard) ->
             activePlayer.tableCards.add(index, adherentCard)
         }
@@ -197,6 +208,7 @@ class HealAll(override val triggeringCard: Card, val healAmount: Int) : SpellCar
 }
 
 class HealAllFriendly(override val triggeringCard: Card) : SpellCardAction() {
+
     override fun resolve(gameState: GameState) {
         super.resolve(gameState)
     }
