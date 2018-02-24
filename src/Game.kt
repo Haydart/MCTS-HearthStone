@@ -7,7 +7,6 @@ const val MAX_ADHERENT_CARDS_COUNT = 7
 
 class Game(var gameState: GameState) {
 
-    private lateinit var activePlayer: Player
 
     init {
         (0 until 3).forEach { gameState.player1.takeCardFromDeck() }
@@ -16,7 +15,6 @@ class Game(var gameState: GameState) {
 
     fun run() {
         with(gameState) {
-            activePlayer = player1
 
             while (!gameEndConditionsMet()) {
                 performTurnIfConditionsMet(activePlayer, getOpponent(activePlayer))
@@ -61,7 +59,5 @@ class Game(var gameState: GameState) {
         } else throw IllegalStateException("The drawn card is neither Adherent nor Spell.")
     }
 
-    private fun getOpponent(activePlayer: Player) = with(gameState) {
-        if (activePlayer == player1) player2 else player1
-    }
+
 }

@@ -15,7 +15,18 @@ data class Player(
 
     var turnsWithDeckCardsDepleted = 0
 
-    lateinit var availableActions: MutableList<Action>
+    fun getAvailableActions(enemyPlayer: Player): List<Action> {
+        val availableActionsList = mutableListOf<Action>()
+
+        handCards.forEach {
+            availableActionsList += it.getActionsFun(it, this, enemyPlayer)
+        }
+        tableCards.forEach {
+            availableActionsList += it.getActionsFun(it, this, enemyPlayer)
+        }
+
+        return availableActionsList
+    }
 
     fun takeCardFromDeck() = handCards.add(deckCards.takeRandomElement())
 
@@ -23,4 +34,3 @@ data class Player(
 }
 
 fun <E> MutableList<E>.takeRandomElement() = this.removeAt(Random().nextInt(this.size))
-

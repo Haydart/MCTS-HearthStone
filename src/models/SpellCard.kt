@@ -1,10 +1,10 @@
 package models
 
 class SpellCard(
-        val getActionsFun: (SpellCard, Player, Player) -> List<Action>,
         name: String,
-        manaCost: Int
-) : Card(name, manaCost) {
+        manaCost: Int,
+        getActionsFun: (Card, Player, Player) -> List<Action>
+) : Card(name, manaCost, getActionsFun) {
 
     fun applyEffect(currentPlayer: Player, enemyPlayer: Player) {
         getActionsFun(this, currentPlayer, enemyPlayer)

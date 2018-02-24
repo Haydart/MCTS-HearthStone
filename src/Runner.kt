@@ -23,7 +23,7 @@ fun main(args: Array<String>) {
             mana = 0
     )
 
-    Game(GameState(player1, player2, turnNumber = 0)).run()
+    Game(GameState(player1, player2, turnNumber = 0, activePlayer = player1)).run()
 }
 
 fun createInitialDeck(): MutableList<Card> = mutableListOf<Card>().apply {
@@ -42,14 +42,14 @@ fun createInitialDeck(): MutableList<Card> = mutableListOf<Card>().apply {
     }
 }
 
-val dragonBreathEffect: (SpellCard, Player, Player) -> List<Action> = { triggeringCard, _, enemyPlayer ->
+val dragonBreathEffect: (Card, Player, Player) -> List<Action> = { triggeringCard, _, enemyPlayer ->
     enemyPlayer.tableCards.forEach {
         it.currentHealthPoints -= 1
     }
-    listOf(Action.HitAllEnemies(triggeringCard))
+    listOf(Action.HitAllEnemies(triggeringCard, 2))
 }
 
-val circleOfHealingEffect: (SpellCard, Player, Player) -> List<Action> = { triggeringCard, currentPlayer, enemyPlayer ->
+val circleOfHealingEffect: (Card, Player, Player) -> List<Action> = { triggeringCard, currentPlayer, enemyPlayer ->
     val allTableCards = mutableListOf<AdherentCard>()
     currentPlayer.tableCards.forEach { allTableCards.add(it) }
     enemyPlayer.tableCards.forEach { allTableCards.add(it) }
@@ -61,10 +61,10 @@ val circleOfHealingEffect: (SpellCard, Player, Player) -> List<Action> = { trigg
     listOf(Action.HealAll(triggeringCard, 3))
 }
 
-val flameLanceEffect: (SpellCard, Player, Player) -> List<Action> = { triggeringCard, _, enemyPlayer ->
+val flameLanceEffect: (Card, Player, Player) -> List<Action> = { triggeringCard, _, enemyPlayer ->
     val actionList = mutableListOf<Action>()
     enemyPlayer.tableCards.forEach {
-        actionList.add(Action.HitOne(triggeringCard, it))
+        actionList.add(Action.HitOne(triggeringCard, it, 4))
     }
     actionList
 }
