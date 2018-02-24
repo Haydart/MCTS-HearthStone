@@ -1,11 +1,15 @@
 package models
 
 import actions.Action
+import actions.DrawCard
 import java.util.*
 
 /**
  * Created by r.makowiecki on 23/02/2018.
  */
+
+const val MAX_ADHERENT_CARDS_LAID_OUT = 7
+
 data class Player(
         val handCards: MutableList<Card>,
         val deckCards: MutableList<Card>,
@@ -30,6 +34,7 @@ data class Player(
 
         return actionsListBeforeConstraining
                 .filter { mana >= it.triggeringCard.manaCost }
+                .filter { it !is DrawCard || tableCards.size < MAX_ADHERENT_CARDS_LAID_OUT }
     }
 
     fun takeCardFromDeck() = handCards.add(deckCards.takeRandomElement())

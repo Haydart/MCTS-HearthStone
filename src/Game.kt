@@ -4,8 +4,6 @@ import models.SpellCard
 import models.takeRandomElement
 import java.util.*
 
-const val MAX_ADHERENT_CARDS_COUNT = 7
-
 class Game(var gameState: GameState) {
 
 //    val gameStatesStack = mutableListOf<GameState>()
@@ -31,21 +29,18 @@ class Game(var gameState: GameState) {
     private fun gameEndConditionsMet() = gameState.player1.healthPoints <= 0 || gameState.player2.healthPoints <= 0
 
     private fun performTurn(currentPlayer: Player, enemyPlayer: Player) {
+        gameState.activePlayer.mana++
         drawCardOrGetPunished(currentPlayer)
-
         println("I have now ${currentPlayer.handCards.size} cards in hand.")
-
         if (gameEndConditionsMet()) return
 
-        if (currentPlayer.tableCards.size < MAX_ADHERENT_CARDS_COUNT) {
-            val availableActions = currentPlayer.getAvailableActions(enemyPlayer)
-//            println(availableActions)
+        val availableActions = currentPlayer.getAvailableActions(enemyPlayer)
+        println("My available actions $availableActions")
 
-            if(!availableActions.isEmpty()) {
-                val randomAvailableAction = availableActions[Random().nextInt(availableActions.size)]
-                println("I'm about to play: ${randomAvailableAction.triggeringCard}")
-                randomAvailableAction.resolve(gameState)
-            }
+        if (!availableActions.isEmpty()) {
+            val randomAvailableAction = availableActions[Random().nextInt(availableActions.size)]
+            println("I'm about to play: ${randomAvailableAction.triggeringCard}")
+            randomAvailableAction.resolve(gameState)
         }
 
         println(gameState.activePlayer)
