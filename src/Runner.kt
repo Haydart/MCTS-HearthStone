@@ -1,4 +1,7 @@
 import actions.Action
+import actions.HealAll
+import actions.HitAllEnemies
+import actions.HitOne
 import models.*
 
 /**
@@ -48,7 +51,7 @@ val dragonBreathEffect: (Card, Player, Player) -> List<Action> = { triggeringCar
     enemyPlayer.tableCards.forEach {
         it.currentHealthPoints -= 1
     }
-    listOf(Action.HitAllEnemies(triggeringCard, 2))
+    listOf(HitAllEnemies(triggeringCard, 2))
 }
 
 val circleOfHealingEffect: (Card, Player, Player) -> List<Action> = { triggeringCard, currentPlayer, enemyPlayer ->
@@ -60,13 +63,13 @@ val circleOfHealingEffect: (Card, Player, Player) -> List<Action> = { triggering
         it.currentHealthPoints += 1
         it.currentHealthPoints = maxOf(it.maxHealthPoints, it.currentHealthPoints)
     }
-    listOf(Action.HealAll(triggeringCard, 3))
+    listOf(HealAll(triggeringCard, 3))
 }
 
 val flameLanceEffect: (Card, Player, Player) -> List<Action> = { triggeringCard, _, enemyPlayer ->
     val actionList = mutableListOf<Action>()
     enemyPlayer.tableCards.forEach {
-        actionList.add(Action.HitOne(triggeringCard, it, 4))
+        actionList.add(HitOne(triggeringCard, it, 4))
     }
     actionList
 }

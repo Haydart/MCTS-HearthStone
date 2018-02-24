@@ -17,7 +17,17 @@ sealed class Action {
 }
 
 sealed class AdherentCardAction : Action()
-sealed class SpellCardAction : Action()
+sealed class SpellCardAction : Action() {
+    override fun resolve(gameState: GameState) {
+        gameState.activePlayer.handCards.remove(triggeringCard)
+        gameState.activePlayer.discardedCount++
+    }
+
+    override fun rollback(gameState: GameState) {
+        gameState.activePlayer.handCards.add(triggeringCard)
+        gameState.activePlayer.discardedCount--
+    }
+}
 
 class DrawCard(override val triggeringCard: Card) : AdherentCardAction() {
 
@@ -84,10 +94,9 @@ class HitOne(override val triggeringCard: Card, val targetCard: AdherentCard, va
     lateinit var killedAdherent: AdherentCard
 
     override fun resolve(gameState: GameState) {
+        super.resolve(gameState)
         with(gameState) {
             targetCard.currentHealthPoints -= damage
-            activePlayer.handCards.remove(triggeringCard)
-
             if (targetCard.currentHealthPoints <= 0) {
                 removedAtIndex = getOpponent(activePlayer).tableCards.indexOf(targetCard)
                 killedAdherent = getOpponent(activePlayer).tableCards.removeAt(removedAtIndex)
@@ -96,12 +105,12 @@ class HitOne(override val triggeringCard: Card, val targetCard: AdherentCard, va
     }
 
     override fun rollback(gameState: GameState) {
+        super.rollback(gameState)
         with(gameState) {
             if (removedAtIndex != -1) {
                 getOpponent(activePlayer).tableCards.add(removedAtIndex, killedAdherent)
             }
             targetCard.currentHealthPoints += damage
-            activePlayer.handCards.add(triggeringCard)
         }
     }
 }
@@ -111,28 +120,30 @@ class HitAllEnemies(override val triggeringCard: Card, val damage: Int) : SpellC
     val removedIndices = mutableListOf<Int>()
     val killedAdherents = mutableListOf<AdherentCard>()
 
-    override fun resolve(gameState: GameState) = with(gameState) {
+    override fun resolve(gameState: GameState) {
+        super.resolve(gameState)
+        with(gameState) {
+            getOpponent(activePlayer).tableCards.forEach {
+                it.currentHealthPoints -= damage
 
-        activePlayer.handCards.remove(triggeringCard)
-
-        getOpponent(activePlayer).tableCards.forEach {
-            it.currentHealthPoints -= damage
-
-            if (it.currentHealthPoints <= 0) {
-                removedIndices.add(getOpponent(activePlayer).tableCards.indexOf(it))
-                val killedAdherent = getOpponent(activePlayer).tableCards.removeAt(removedIndices.last())
-                killedAdherents += killedAdherent
+                if (it.currentHealthPoints <= 0) {
+                    removedIndices.add(getOpponent(activePlayer).tableCards.indexOf(it))
+                    val killedAdherent = getOpponent(activePlayer).tableCards.removeAt(removedIndices.last())
+                    killedAdherents += killedAdherent
+                }
             }
         }
     }
 
-    override fun rollback(gameState: GameState) = with(gameState) {
-        killedAdherents.forEachIndexed { loopIndex, adherentCard ->
-            getOpponent(activePlayer).tableCards.add(removedIndices[loopIndex], adherentCard)
-        }
-
-        getOpponent(activePlayer).tableCards.forEach {
-            it.currentHealthPoints += damage
+    override fun rollback(gameState: GameState) {
+        super.rollback(gameState)
+        with(gameState) {
+            killedAdherents.forEachIndexed { loopIndex, adherentCard ->
+                getOpponent(activePlayer).tableCards.add(removedIndices[loopIndex], adherentCard)
+            }
+            getOpponent(activePlayer).tableCards.forEach {
+                it.currentHealthPoints += damage
+            }
         }
     }
 }
@@ -142,11 +153,13 @@ class HealOne(override val triggeringCard: Card, val targetCard: AdherentCard, v
     private var effectivelyHealedAmount = 0
 
     override fun resolve(gameState: GameState) {
+        super.resolve(gameState)
         effectivelyHealedAmount = minOf(targetCard.maxHealthPoints - targetCard.currentHealthPoints, healAmount)
         targetCard.currentHealthPoints += effectivelyHealedAmount
     }
 
     override fun rollback(gameState: GameState) {
+        super.rollback(gameState)
         targetCard.currentHealthPoints = targetCard.currentHealthPoints - effectivelyHealedAmount
     }
 }
@@ -157,8 +170,7 @@ class HealAll(override val triggeringCard: Card, val healAmount: Int) : SpellCar
     private var allTableCards = mutableListOf<AdherentCard>()
 
     override fun resolve(gameState: GameState) {
-
-        gameState.activePlayer.handCards.remove(triggeringCard)
+        super.resolve(gameState)
 
         gameState.player1.tableCards.forEach {
             allTableCards.add(it)
@@ -175,7 +187,8 @@ class HealAll(override val triggeringCard: Card, val healAmount: Int) : SpellCar
     }
 
     override fun rollback(gameState: GameState) {
-        gameState.activePlayer.handCards.add(triggeringCard)
+        super.rollback(gameState)
+
         allTableCards.forEachIndexed { index, adherentCard ->
             adherentCard.currentHealthPoints -= effectivelyHealedAmounts[index]
         }
@@ -183,8 +196,12 @@ class HealAll(override val triggeringCard: Card, val healAmount: Int) : SpellCar
 }
 
 class HealAllFriendly(override val triggeringCard: Card) : SpellCardAction() {
-    override fun resolve(gameState: GameState) = Unit
+    override fun resolve(gameState: GameState) {
+        super.resolve(gameState)
+    }
 
-    override fun rollback(gameState: GameState) = Unit
+    override fun rollback(gameState: GameState) {
+        super.rollback(gameState)
+    }
 }
 

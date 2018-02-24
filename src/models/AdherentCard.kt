@@ -1,16 +1,18 @@
 package models
 
 import actions.Action
+import actions.DrawCard
+import actions.HitOne
 
 val defaultAdherentActionsFun: (Card, Player, Player) -> List<Action> = { triggeringCard, (handCards), enemyPlayer ->
     val availableActions = mutableListOf<Action>()
     val isInHand = triggeringCard in handCards
 
     enemyPlayer.tableCards.forEach {
-        availableActions += Action.HitOne(triggeringCard, it, (triggeringCard as AdherentCard).attackStrength)
+        availableActions += HitOne(triggeringCard, it, (triggeringCard as AdherentCard).attackStrength)
     }
 
-    if(isInHand) availableActions += Action.DrawCard(triggeringCard)
+    if(isInHand) availableActions += DrawCard(triggeringCard)
     availableActions
 }
 
