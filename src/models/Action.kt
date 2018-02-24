@@ -56,6 +56,8 @@ sealed class Action {
 
         override fun resolve(gameState: GameState) {
 
+            gameState.activePlayer.handCards.remove(triggeringCard)
+
             gameState.player1.tableCards.forEach {
                 allTableCards.add(it)
             }
@@ -71,6 +73,7 @@ sealed class Action {
         }
 
         override fun rollback(gameState: GameState) {
+            gameState.activePlayer.handCards.add(triggeringCard)
             allTableCards.forEachIndexed { index, adherentCard ->
                 adherentCard.currentHealthPoints -= effectivelyHealedAmounts[index]
             }
@@ -88,20 +91,26 @@ sealed class Action {
         var removedAtIndex = -1
         lateinit var killedAdherent: AdherentCard
 
-        override fun resolve(gameState: GameState) = with(gameState) {
-            targetCard.currentHealthPoints -= damage
+        override fun resolve(gameState: GameState) {
+            with(gameState) {
+                targetCard.currentHealthPoints -= damage
+                activePlayer.handCards.remove(triggeringCard)
 
-            if (targetCard.currentHealthPoints <= 0) {
-                removedAtIndex = getOpponent(activePlayer).tableCards.indexOf(targetCard)
-                killedAdherent = getOpponent(activePlayer).tableCards.removeAt(removedAtIndex)
+                if (targetCard.currentHealthPoints <= 0) {
+                    removedAtIndex = getOpponent(activePlayer).tableCards.indexOf(targetCard)
+                    killedAdherent = getOpponent(activePlayer).tableCards.removeAt(removedAtIndex)
+                }
             }
         }
 
-        override fun rollback(gameState: GameState) = with(gameState) {
-            if (removedAtIndex != -1) {
-                getOpponent(activePlayer).tableCards.add(removedAtIndex, killedAdherent)
+        override fun rollback(gameState: GameState) {
+            with(gameState) {
+                if (removedAtIndex != -1) {
+                    getOpponent(activePlayer).tableCards.add(removedAtIndex, killedAdherent)
+                }
+                targetCard.currentHealthPoints += damage
+                activePlayer.handCards.add(triggeringCard)
             }
-            targetCard.currentHealthPoints += damage
         }
     }
 
@@ -149,6 +158,9 @@ sealed class Action {
         val killedAdherents = mutableListOf<AdherentCard>()
 
         override fun resolve(gameState: GameState) = with(gameState) {
+
+            activePlayer.handCards.remove(triggeringCard)
+
             getOpponent(activePlayer).tableCards.forEach {
                 it.currentHealthPoints -= damage
 
