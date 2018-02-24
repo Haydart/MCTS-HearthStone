@@ -39,22 +39,22 @@ fun createInitialDeck(): MutableList<Card> = mutableListOf<Card>().apply {
         add(AdherentCard(maxHealthPoints = 5, attackStrength = 2, manaCost = 3, name = "Public Defender"))
         add(AdherentCard(maxHealthPoints = 2, attackStrength = 3, manaCost = 1, name = "Murloc"))
 
-        add(SpellCard(name = "Flame Lance", manaCost = 4))
-        add(SpellCard(name = "Dragon's Breath", manaCost = 5))
-        add(SpellCard(name = "Circle of Healing", manaCost = 0))
+        add(SpellCard(name = "Flame Lance", manaCost = 4, applyEffectFun = flameLanceEffect))
+        add(SpellCard(name = "Dragon's Breath", manaCost = 5, applyEffectFun = dragonBreathEffect))
+        add(SpellCard(name = "Circle of Healing", manaCost = 0, applyEffectFun = circleOfHealingEffect))
     }
 }
 
 val dragonBreathEffect: (Player, Player) -> Unit = { _, enemyPlayer ->
     enemyPlayer.tableCards.forEach {
-        (it as AdherentCard).currentHealthPoints -= 1
+        it.currentHealthPoints -= 1
     }
 }
 
 val circleOfHealingEffect: (Player, Player) -> Unit = { currentPlayer, enemyPlayer ->
-    val allTableCards = MutableList<AdherentCard>(currentPlayer.tableCards.size + enemyPlayer.tableCards.size) {}
-    currentPlayer.tableCards.forEach { allTableCards.add(it as AdherentCard) }
-    enemyPlayer.tableCards.forEach { allTableCards.add(it as AdherentCard) }
+    val allTableCards = mutableListOf<AdherentCard>()
+    currentPlayer.tableCards.forEach { allTableCards.add(it) }
+    enemyPlayer.tableCards.forEach { allTableCards.add(it) }
 
     allTableCards.forEach {
         it.currentHealthPoints += 1
