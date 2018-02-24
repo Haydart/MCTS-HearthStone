@@ -12,7 +12,8 @@ fun main(args: Array<String>) {
             createInitialDeck(),
             mutableListOf(),
             healthPoints = 20,
-            mana = 0
+            mana = 0,
+            name = "Player1"
     )
 
     val player2 = Player(
@@ -20,7 +21,8 @@ fun main(args: Array<String>) {
             createInitialDeck(),
             mutableListOf(),
             healthPoints = 20,
-            mana = 0
+            mana = 0,
+            name = "Player2"
     )
 
     Game(GameState(player1, player2, turnNumber = 0, activePlayer = player1)).run()

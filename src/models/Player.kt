@@ -10,7 +10,8 @@ data class Player(
         val deckCards: MutableList<Card>,
         val tableCards: MutableList<AdherentCard>,
         var healthPoints: Int,
-        var mana: Int
+        var mana: Int,
+        val name: String
 ) {
 
     var turnsWithDeckCardsDepleted = 0
@@ -30,7 +31,7 @@ data class Player(
 
     fun takeCardFromDeck() = handCards.add(deckCards.takeRandomElement())
 
-    override fun toString() = "deckCards: ${deckCards.size}, handCards: ${handCards.size}, tableCards: ${tableCards.size}"
+    override fun toString() = "$name deckCards(${deckCards.size}): , handCards(${handCards.size}), tableCards(${tableCards.size})"
 }
 
 fun <E> MutableList<E>.takeRandomElement() = this.removeAt(Random().nextInt(this.size))
