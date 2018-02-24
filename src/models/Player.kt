@@ -39,7 +39,8 @@ data class Player(
 
     fun takeCardFromDeck() = handCards.add(deckCards.takeRandomElement())
 
-    override fun toString() = "$name deckCards(${deckCards.size}), handCards(${handCards.size}), tableCards(${tableCards.size}), discardedCards($discardedCount)"
+    override fun toString() = "$name deckCards(${deckCards.size}), handCards(${handCards.size}), tableCards(${tableCards.size}), " +
+            "discardedCards($discardedCount), HP($healthPoints), mana($mana)"
 }
 
 fun <E> MutableList<E>.takeRandomElement() = this.removeAt(Random().nextInt(this.size))

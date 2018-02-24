@@ -17,6 +17,7 @@ class Game(var gameState: GameState) {
         with(gameState) {
 
             while (!gameEndConditionsMet()) {
+                gameState.turnNumber++
                 performTurn(activePlayer, getOpponent(activePlayer))
                 activePlayer = getOpponent(activePlayer)
             }
@@ -29,9 +30,9 @@ class Game(var gameState: GameState) {
     private fun gameEndConditionsMet() = gameState.player1.healthPoints <= 0 || gameState.player2.healthPoints <= 0
 
     private fun performTurn(currentPlayer: Player, enemyPlayer: Player) {
-        gameState.activePlayer.mana++
+        gameState.activePlayer.mana = (gameState.turnNumber - 1) / 2 + 1
         drawCardOrGetPunished(currentPlayer)
-        println("I have now ${currentPlayer.handCards.size} cards in hand.")
+        println(gameState.activePlayer)
         if (gameEndConditionsMet()) return
 
         val availableActions = currentPlayer.getAvailableActions(enemyPlayer)
@@ -43,7 +44,6 @@ class Game(var gameState: GameState) {
             randomAvailableAction.resolve(gameState)
         }
 
-        println(gameState.activePlayer)
         println("I have now ${currentPlayer.handCards.size} cards in hand.")
 
         println("I have ${gameState.activePlayer.healthPoints} HP")
