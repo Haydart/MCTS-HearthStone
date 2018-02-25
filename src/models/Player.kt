@@ -1,7 +1,7 @@
 package models
 
-import actions.Action
-import actions.DrawCard
+import actions.CardAction
+import actions.PlaceAdherentCard
 import java.util.*
 
 /**
@@ -22,8 +22,8 @@ data class Player(
     var turnsWithDeckCardsDepleted = 0
     var discardedCount = 0
 
-    fun getAvailableActions(enemyPlayer: Player): List<Action> {
-        val actionsListBeforeConstraining = mutableListOf<Action>()
+    fun getAvailableActions(enemyPlayer: Player): List<CardAction> {
+        val actionsListBeforeConstraining = mutableListOf<CardAction>()
 
         handCards.forEach {
             actionsListBeforeConstraining += it.getActionsFun(it, this, enemyPlayer)
@@ -34,7 +34,8 @@ data class Player(
 
         return actionsListBeforeConstraining
                 .filter { mana >= it.triggeringCard.manaCost }
-                .filter { it !is DrawCard || tableCards.size < MAX_ADHERENT_CARDS_LAID_OUT }
+                .filter { it !is PlaceAdherentCard || tableCards.size < MAX_ADHERENT_CARDS_LAID_OUT }
+                .filter { it.triggeringCard !is AdherentCard || !(it.triggeringCard as AdherentCard).hasBeenUsedInCurrentTurn }
     }
 
     fun takeCardFromDeck() = handCards.add(deckCards.takeRandomElement())
