@@ -36,12 +36,12 @@ data class Player(
         }
 
         return actionsListBeforeConstraining
-                .filter(this::userCanAffordThatCard)
+                .filter(this::userCanAffordTheCardIfInHand)
                 .filter(this::placedAdherentCardsCountIsBelowLimit)
                 .filter(this::cardWasNotUsedInCurrentTurn) + EndTurn()
     }
 
-    private fun userCanAffordThatCard(action: CardAction) = mana >= action.triggeringCard.manaCost
+    private fun userCanAffordTheCardIfInHand(action: CardAction) = mana >= action.triggeringCard.manaCost || action.triggeringCard in tableCards
 
     private fun placedAdherentCardsCountIsBelowLimit(action: CardAction) = action !is PlaceAdherentCard || tableCards.size < MAX_ADHERENT_CARDS_LAID_OUT
 
