@@ -96,7 +96,20 @@ class FightAnotherAdherent(override val triggeringCard: AdherentCard, val target
     }
 }
 
-class FightEnemyHero() : AdherentCardAction()
+class FightEnemyHero(override val triggeringCard: AdherentCard) : AdherentCardAction() {
+
+    override fun resolve(gameState: GameState) {
+        with(gameState) {
+            getOpponent(activePlayer).healthPoints -= triggeringCard.attackStrength
+        }
+    }
+
+    override fun rollback(gameState: GameState) {
+        with(gameState) {
+            getOpponent(activePlayer).healthPoints += triggeringCard.attackStrength
+        }
+    }
+}
 
 class HitOne(override val triggeringCard: Card, val targetCard: AdherentCard, val damage: Int) : SpellCardAction() {
 
