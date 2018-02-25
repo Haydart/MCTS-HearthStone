@@ -1,16 +1,16 @@
 package models
 
-import actions.Action
-import actions.DrawCard
+import actions.CardAction
+import actions.PlaceAdherentCard
 import actions.FightAnotherAdherent
 import actions.FightEnemyHero
 
-val defaultAdherentActionsFun: (Card, Player, Player) -> List<Action> = { triggeringCard, (handCards, _, tableCards), enemyPlayer ->
+val defaultAdherentActionsFun: (Card, Player, Player) -> List<CardAction> = { triggeringCard, (handCards, _, tableCards), enemyPlayer ->
     triggeringCard as AdherentCard // smart casting
-    val availableActions = mutableListOf<Action>()
+    val availableActions = mutableListOf<CardAction>()
 
     if (triggeringCard in handCards) {
-        availableActions += DrawCard(triggeringCard)
+        availableActions += PlaceAdherentCard(triggeringCard)
     } else if (triggeringCard in tableCards && !triggeringCard.hasBeenUsedInCurrentTurn) {
         enemyPlayer.tableCards.forEach { enemyCard ->
             availableActions += FightAnotherAdherent(triggeringCard, enemyCard)
@@ -24,7 +24,7 @@ val defaultAdherentActionsFun: (Card, Player, Player) -> List<Action> = { trigge
 class AdherentCard(
         val maxHealthPoints: Int,
         var attackStrength: Int,
-        var hasBeenUsedInCurrentTurn: Boolean,
+        var hasBeenUsedInCurrentTurn: Boolean = false,
         name: String,
         manaCost: Int
 ) : Card(name, manaCost, defaultAdherentActionsFun) {

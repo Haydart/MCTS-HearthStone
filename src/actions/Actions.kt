@@ -3,6 +3,7 @@ package actions
 import GameState
 import models.AdherentCard
 import models.Card
+import models.Player
 
 /**
  * Created by r.makowiecki on 24/02/2018.
@@ -10,16 +11,34 @@ import models.Card
 
 typealias Index = Int
 
-sealed class Action {
-    abstract val triggeringCard: Card
-
+abstract class Action {
     abstract fun resolve(gameState: GameState)
     abstract fun rollback(gameState: GameState)
 }
 
-sealed class AdherentCardAction : Action()
+abstract class CardAction : Action() {
+    abstract val triggeringCard: Card
+}
 
-sealed class SpellCardAction : Action() {
+class EndTurn : Action() {
+
+    val usedCardsList = mutableListOf<AdherentCard>()
+
+    override fun resolve(gameState: GameState) {
+        gameState.activePlayer.tableCards.forEach {
+            usedCardsList.add(it)
+            it.hasBeenUsedInCurrentTurn = false
+        }
+    }
+
+    override fun rollback(gameState: GameState) {
+        usedCardsList.forEach { it.hasBeenUsedInCurrentTurn = true }
+    }
+}
+
+abstract class AdherentCardAction : CardAction()
+
+abstract class SpellCardAction : CardAction() {
 
     override fun resolve(gameState: GameState) {
         gameState.activePlayer.mana -= triggeringCard.manaCost
@@ -34,10 +53,10 @@ sealed class SpellCardAction : Action() {
     }
 }
 
-class DrawCard(override val triggeringCard: AdherentCard) : AdherentCardAction() {
+class PlaceAdherentCard(override val triggeringCard: AdherentCard) : AdherentCardAction() {
 
     init {
-        if (triggeringCard !is AdherentCard) throw IllegalAccessException("DrawCard can only be the action of an adherent card.")
+        if (triggeringCard !is AdherentCard) throw IllegalAccessException("PlaceAdherentCard can only be the action of an adherent card.")
     }
 
     override fun resolve(gameState: GameState) {
@@ -80,6 +99,7 @@ class FightAnotherAdherent(override val triggeringCard: AdherentCard, val target
             val removedAdherent = activePlayer.tableCards.removeAt(removedAt)
             activePlayerKilledAdherent = Pair(removedAt, removedAdherent)
         }
+        triggeringCard.hasBeenUsedInCurrentTurn = true
     }
 
     override fun rollback(gameState: GameState) = with(gameState) {
@@ -93,6 +113,7 @@ class FightAnotherAdherent(override val triggeringCard: AdherentCard, val target
 
         targetCard.currentHealthPoints += triggeringCard.attackStrength
         triggeringCard.currentHealthPoints += targetCard.attackStrength
+        triggeringCard.hasBeenUsedInCurrentTurn = false
     }
 }
 
@@ -102,12 +123,14 @@ class FightEnemyHero(override val triggeringCard: AdherentCard) : AdherentCardAc
         with(gameState) {
             getOpponent(activePlayer).healthPoints -= triggeringCard.attackStrength
         }
+        triggeringCard.hasBeenUsedInCurrentTurn = true
     }
 
     override fun rollback(gameState: GameState) {
         with(gameState) {
             getOpponent(activePlayer).healthPoints += triggeringCard.attackStrength
         }
+        triggeringCard.hasBeenUsedInCurrentTurn = false
     }
 }
 
