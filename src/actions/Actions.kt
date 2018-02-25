@@ -3,7 +3,6 @@ package actions
 import GameState
 import models.AdherentCard
 import models.Card
-import models.Player
 
 /**
  * Created by r.makowiecki on 24/02/2018.
@@ -26,8 +25,10 @@ class EndTurn : Action() {
 
     override fun resolve(gameState: GameState) {
         gameState.activePlayer.tableCards.forEach {
-            usedCardsList.add(it)
-            it.hasBeenUsedInCurrentTurn = false
+            if (it.hasBeenUsedInCurrentTurn) {
+                usedCardsList.add(it)
+                it.hasBeenUsedInCurrentTurn = false
+            }
         }
     }
 
