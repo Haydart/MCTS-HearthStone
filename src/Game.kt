@@ -2,11 +2,11 @@ import models.AdherentCard
 import models.Player
 import models.SpellCard
 import models.takeRandomElement
-
-const val MAX_ADHERENT_CARDS_COUNT = 7
+import java.util.*
 
 class Game(var gameState: GameState) {
 
+//    val gameStatesStack = mutableListOf<GameState>()
 
     init {
         (0 until 3).forEach { gameState.player1.takeCardFromDeck() }
@@ -17,7 +17,8 @@ class Game(var gameState: GameState) {
         with(gameState) {
 
             while (!gameEndConditionsMet()) {
-                performTurnIfConditionsMet(activePlayer, getOpponent(activePlayer))
+                gameState.turnNumber++
+                performTurn(activePlayer, getOpponent(activePlayer))
                 activePlayer = getOpponent(activePlayer)
             }
 
@@ -28,24 +29,37 @@ class Game(var gameState: GameState) {
 
     private fun gameEndConditionsMet() = gameState.player1.healthPoints <= 0 || gameState.player2.healthPoints <= 0
 
-    private fun performTurnIfConditionsMet(currentPlayer: Player, enemyPlayer: Player) {
+    private fun performTurn(currentPlayer: Player, enemyPlayer: Player) {
+        gameState.activePlayer.mana = (gameState.turnNumber - 1) / 2 + 1
+        drawCardOrGetPunished(currentPlayer)
+        println(gameState.activePlayer)
+        if (gameEndConditionsMet()) return
+
+        val availableActions = currentPlayer.getAvailableActions(enemyPlayer)
+        println("My available actions $availableActions")
+
+        if (!availableActions.isEmpty()) {
+            val randomAvailableAction = availableActions[Random().nextInt(availableActions.size)]
+            println("I'm about to play: ${randomAvailableAction.triggeringCard}")
+            randomAvailableAction.resolve(gameState)
+        }
+
+        println("I have now ${currentPlayer.handCards.size} cards in hand.")
+
+        println("I have ${gameState.activePlayer.healthPoints} HP")
+        println("------ Turn ended ------")
+    }
+
+    private fun drawCardOrGetPunished(currentPlayer: Player) {
         if (currentPlayer.deckCards.size > 0) {
-            performTurn(currentPlayer, enemyPlayer)
+            currentPlayer.takeCardFromDeck()
         } else {
             currentPlayer.turnsWithDeckCardsDepleted++
-            punishPlayer(currentPlayer)
+            punishPlayerWithEmptyDeck(currentPlayer)
         }
     }
 
-    private fun performTurn(currentPlayer: Player, enemyPlayer: Player) {
-        currentPlayer.takeCardFromDeck()
-
-        if (currentPlayer.tableCards.size < MAX_ADHERENT_CARDS_COUNT) {
-            currentPlayer.useRandomCard()
-        }
-    }
-
-    private fun punishPlayer(player: Player) {
+    private fun punishPlayerWithEmptyDeck(player: Player) {
         player.healthPoints -= player.turnsWithDeckCardsDepleted * 2
     }
 
@@ -55,9 +69,17 @@ class Game(var gameState: GameState) {
         if (drawnCard is AdherentCard) {
             tableCards.add(drawnCard)
         } else if (drawnCard is SpellCard) {
-            drawnCard.applyEffect(activePlayer, getOpponent(activePlayer))
+//            drawnCard.applyEffect(activePlayer, getOpponent(activePlayer))
         } else throw IllegalStateException("The drawn card is neither Adherent nor Spell.")
     }
+}
 
+fun <E> MutableList<E>.push(element: E) {
+    add(element)
+}
 
+fun <E> MutableList<E>.pop(): E {
+    val lastItem = last()
+    remove(lastItem)
+    return lastItem
 }
