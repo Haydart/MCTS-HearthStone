@@ -39,8 +39,12 @@ class GameWindow: Application() {
         root.children.add(horBox)
 
         gGameInstance?.let {
-            it.gameState.player1.handCards.forEach {
-                horBox.children.add(CardVis(it))
+            val isActive = it.gameState.activePlayer == it.gameState.player1
+            val gameState = it.gameState
+            gameState.player1.handCards.forEach {
+                val card = CardVis(it)
+                card.setActive(isActive && it.getActionsFun(it, gameState.player1, gameState.player2).isNotEmpty())
+                horBox.children.add(card)
             }
         }
 
@@ -48,8 +52,12 @@ class GameWindow: Application() {
         root.children.add(hor2Box)
 
         gGameInstance?.let {
-            it.gameState.player2.handCards.forEach {
-                hor2Box.children.add(CardVis(it))
+            val isActive = it.gameState.activePlayer == it.gameState.player2
+            val gameState = it.gameState
+            gameState.player2.handCards.forEach {
+                val card = CardVis(it)
+                card.setActive(isActive && it.getActionsFun(it, gameState.player2, gameState.player1).isNotEmpty())
+                hor2Box.children.add(card)
             }
         }
 

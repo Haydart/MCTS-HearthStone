@@ -32,4 +32,8 @@ class CardVis(var cardModel: Card) : StackPane(){
 
         this.children.add(l)
     }
+
+    fun setActive(isActive: Boolean) {
+        (this.children.last() as Label).font = Font.font("Serif", if (isActive) FontWeight.EXTRA_BOLD else FontWeight.NORMAL, 10.0)
+    }
 }
