@@ -33,10 +33,16 @@ data class Player(
         }
 
         return actionsListBeforeConstraining
-                .filter { mana >= it.triggeringCard.manaCost }
-                .filter { it !is PlaceAdherentCard || tableCards.size < MAX_ADHERENT_CARDS_LAID_OUT }
-                .filter { it.triggeringCard !is AdherentCard || !(it.triggeringCard as AdherentCard).hasBeenUsedInCurrentTurn }
+                .filter (this::userCanAffordThatCard)
+                .filter (this::placedAdherentCardsCountIsBelowLimit)
+                .filter (this::cardWasNotUsedInCurrentTurn)
     }
+
+    private fun userCanAffordThatCard(action: CardAction) = mana >= action.triggeringCard.manaCost
+
+    private fun placedAdherentCardsCountIsBelowLimit(action: CardAction) = action !is PlaceAdherentCard || tableCards.size < MAX_ADHERENT_CARDS_LAID_OUT
+
+    private fun cardWasNotUsedInCurrentTurn(action: CardAction) = action.triggeringCard !is AdherentCard || !(action.triggeringCard as AdherentCard).hasBeenUsedInCurrentTurn
 
     fun takeCardFromDeck() = handCards.add(deckCards.takeRandomElement())
 
