@@ -1,8 +1,11 @@
 package models
 
+import actions.Action
 import actions.CardAction
+import actions.EndTurn
 import actions.PlaceAdherentCard
 import java.util.*
+
 
 /**
  * Created by r.makowiecki on 23/02/2018.
@@ -22,7 +25,7 @@ data class Player(
     var turnsWithDeckCardsDepleted = 0
     var discardedCount = 0
 
-    fun getAvailableActions(enemyPlayer: Player): List<CardAction> {
+    fun getAvailableActions(enemyPlayer: Player): List<Action> {
         val actionsListBeforeConstraining = mutableListOf<CardAction>()
 
         handCards.forEach {
@@ -33,9 +36,9 @@ data class Player(
         }
 
         return actionsListBeforeConstraining
-                .filter (this::userCanAffordThatCard)
-                .filter (this::placedAdherentCardsCountIsBelowLimit)
-                .filter (this::cardWasNotUsedInCurrentTurn)
+                .filter(this::userCanAffordThatCard)
+                .filter(this::placedAdherentCardsCountIsBelowLimit)
+                .filter(this::cardWasNotUsedInCurrentTurn) + EndTurn()
     }
 
     private fun userCanAffordThatCard(action: CardAction) = mana >= action.triggeringCard.manaCost

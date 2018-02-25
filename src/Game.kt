@@ -1,3 +1,4 @@
+import actions.CardAction
 import models.AdherentCard
 import models.Player
 import models.SpellCard
@@ -40,7 +41,13 @@ class Game(var gameState: GameState) {
 
         if (!availableActions.isEmpty()) {
             val randomAvailableAction = availableActions[Random().nextInt(availableActions.size)]
-            println("I'm about to play: ${randomAvailableAction.triggeringCard}")
+
+            if (randomAvailableAction is CardAction) {
+                println("I'm about to play: ${randomAvailableAction.triggeringCard}")
+            } else {
+                println("I chose to end my turn")
+            }
+
             randomAvailableAction.resolve(gameState)
         }
 
