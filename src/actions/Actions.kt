@@ -13,26 +13,22 @@ typealias Index = Int
 sealed class Action {
     abstract val triggeringCard: Card
 
-    open fun resolve(gameState: GameState) {
-        gameState.activePlayer.mana -= triggeringCard.manaCost
-    }
-
-    open fun rollback(gameState: GameState) {
-        gameState.activePlayer.mana += triggeringCard.manaCost
-    }
+    abstract fun resolve(gameState: GameState)
+    abstract fun rollback(gameState: GameState)
 }
 
 sealed class AdherentCardAction : Action()
+
 sealed class SpellCardAction : Action() {
 
     override fun resolve(gameState: GameState) {
-        super.resolve(gameState)
+        gameState.activePlayer.mana -= triggeringCard.manaCost
         gameState.activePlayer.handCards.remove(triggeringCard)
         gameState.activePlayer.discardedCount++
     }
 
     override fun rollback(gameState: GameState) {
-        super.rollback(gameState)
+        gameState.activePlayer.mana += triggeringCard.manaCost
         gameState.activePlayer.handCards.add(triggeringCard)
         gameState.activePlayer.discardedCount--
     }
@@ -45,16 +41,16 @@ class DrawCard(override val triggeringCard: Card) : AdherentCardAction() {
     }
 
     override fun resolve(gameState: GameState) {
-        super.resolve(gameState)
         with(gameState.activePlayer) {
+            mana -= triggeringCard.manaCost
             tableCards.add(triggeringCard as AdherentCard)
             handCards.remove(triggeringCard)
         }
     }
 
     override fun rollback(gameState: GameState) {
-        super.rollback(gameState)
         with(gameState.activePlayer) {
+            mana += triggeringCard.manaCost
             tableCards.remove(triggeringCard)
             handCards.add(triggeringCard)
         }
@@ -99,6 +95,8 @@ class FightAnotherAdherent(override val triggeringCard: AdherentCard, val target
         triggeringCard.currentHealthPoints += targetCard.attackStrength
     }
 }
+
+class FightEnemyHero() : AdherentCardAction()
 
 class HitOne(override val triggeringCard: Card, val targetCard: AdherentCard, val damage: Int) : SpellCardAction() {
 

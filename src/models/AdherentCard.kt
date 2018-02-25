@@ -2,28 +2,30 @@ package models
 
 import actions.Action
 import actions.DrawCard
-import actions.HitOne
+import actions.FightAnotherAdherent
 
-val defaultAdherentActionsFun: (Card, Player, Player) -> List<Action> = { triggeringCard, (handCards), enemyPlayer ->
+val defaultAdherentActionsFun: (Card, Player, Player) -> List<Action> = { triggeringCard, (handCards, _, tableCards), enemyPlayer ->
     val availableActions = mutableListOf<Action>()
-    val isInHand = triggeringCard in handCards
 
-    enemyPlayer.tableCards.forEach {
-        availableActions += HitOne(triggeringCard, it, (triggeringCard as AdherentCard).attackStrength)
+    if (triggeringCard in handCards) {
+        availableActions += DrawCard(triggeringCard)
+    } else if (triggeringCard in tableCards) {
+        enemyPlayer.tableCards.forEach { enemyCard ->
+            availableActions += FightAnotherAdherent(triggeringCard as AdherentCard, enemyCard)
+        }
+        availableActions += FightEnemyHero()
     }
 
-    if(isInHand) availableActions += DrawCard(triggeringCard)
     availableActions
 }
 
 class AdherentCard(
         val maxHealthPoints: Int,
         var attackStrength: Int,
-        var lastTurnPlaced: Int = -1,
+        var tablePlacementTurn: Int = -1,
         name: String,
         manaCost: Int
 ) : Card(name, manaCost, defaultAdherentActionsFun) {
 
     var currentHealthPoints: Int = maxHealthPoints
-
 }

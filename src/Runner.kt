@@ -48,10 +48,7 @@ fun createInitialDeck(): MutableList<Card> = mutableListOf<Card>().apply {
 }
 
 val dragonBreathEffect: (Card, Player, Player) -> List<Action> = { triggeringCard, _, enemyPlayer ->
-    enemyPlayer.tableCards.forEach {
-        it.currentHealthPoints -= 1
-    }
-    listOf(HitAllEnemies(triggeringCard, 2))
+    listOf(HitAllEnemies(triggeringCard, damage = 2))
 }
 
 val circleOfHealingEffect: (Card, Player, Player) -> List<Action> = { triggeringCard, currentPlayer, enemyPlayer ->
@@ -59,11 +56,7 @@ val circleOfHealingEffect: (Card, Player, Player) -> List<Action> = { triggering
     currentPlayer.tableCards.forEach { allTableCards.add(it) }
     enemyPlayer.tableCards.forEach { allTableCards.add(it) }
 
-    allTableCards.forEach {
-        it.currentHealthPoints += 1
-        it.currentHealthPoints = maxOf(it.maxHealthPoints, it.currentHealthPoints)
-    }
-    listOf(HealAll(triggeringCard, 3))
+    listOf(HealAll(triggeringCard, healAmount = 3))
 }
 
 val flameLanceEffect: (Card, Player, Player) -> List<Action> = { triggeringCard, _, enemyPlayer ->
