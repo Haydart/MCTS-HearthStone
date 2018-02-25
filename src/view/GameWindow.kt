@@ -38,51 +38,18 @@ class GameWindow: Application() {
         val horBox = HBox(25.0)
         root.children.add(horBox)
 
-
-
         gGameInstance?.let {
-
-            val isActive = it.gameState.activePlayer == it.gameState.player1
             it.gameState.player1.handCards.forEach {
-
-                val l = Label(it.name)
-                l.font = Font.font("Serif", if (isActive) FontWeight.NORMAL else FontWeight.EXTRA_BOLD, 10.0)
-
-                val stack = StackPane()
-
-                val rect = Rectangle(0.0, 0.0, 80.0, 80.0)
-                rect.fill = Color.LIGHTBLUE
-
-                rect.setOnMouseClicked(object : EventHandler<MouseEvent> {
-                    override fun handle(event: MouseEvent?) {
-                        println("aaa")
-                        rect.y += 50.0
-                        rect.width += 50
-                        rect.height += 50
-                    }
-                })
-
-                stack.children.add(rect)
-                stack.children.add(l)
-
-                horBox.children.addAll(stack)
-
+                horBox.children.add(CardVis(it))
             }
         }
-
 
         val hor2Box = HBox(25.0)
         root.children.add(hor2Box)
 
-
         gGameInstance?.let {
-
-            val isActive = it.gameState.activePlayer == it.gameState.player2
             it.gameState.player2.handCards.forEach {
-                val l = Label(it.name)
-                l.font = Font.font("Serif", if (isActive) FontWeight.NORMAL else FontWeight.EXTRA_BOLD, 10.0)
-                hor2Box.children.add(l)
-
+                hor2Box.children.add(CardVis(it))
             }
         }
 
