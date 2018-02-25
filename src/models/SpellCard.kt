@@ -9,4 +9,6 @@ class SpellCard(
 ) : Card(name, manaCost, getActionsFun) {
 
     fun getActions(currentPlayer: Player, enemyPlayer: Player) = getActionsFun(this, currentPlayer, enemyPlayer)
+
+    override fun toString() = "name($name), manaCost($manaCost)"
 }

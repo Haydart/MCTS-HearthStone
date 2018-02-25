@@ -1,9 +1,9 @@
 package models
 
 import actions.CardAction
-import actions.PlaceAdherentCard
 import actions.FightAnotherAdherent
 import actions.FightEnemyHero
+import actions.PlaceAdherentCard
 
 val defaultAdherentActionsFun: (Card, Player, Player) -> List<CardAction> = { triggeringCard, (handCards, _, tableCards), enemyPlayer ->
     triggeringCard as AdherentCard // smart casting
@@ -30,4 +30,6 @@ class AdherentCard(
 ) : Card(name, manaCost, defaultAdherentActionsFun) {
 
     var currentHealthPoints: Int = maxHealthPoints
+
+    override fun toString() = "name($name), manaCost($manaCost), wasUsedInThisTurn($hasBeenUsedInCurrentTurn)"
 }
