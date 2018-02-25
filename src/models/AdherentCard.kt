@@ -1,29 +1,35 @@
 package models
 
-import actions.Action
-import actions.DrawCard
-import actions.HitOne
+import actions.CardAction
+import actions.FightAnotherAdherent
+import actions.FightEnemyHero
+import actions.PlaceAdherentCard
 
-val defaultAdherentActionsFun: (Card, Player, Player) -> List<Action> = { triggeringCard, (handCards), enemyPlayer ->
-    val availableActions = mutableListOf<Action>()
-    val isInHand = triggeringCard in handCards
+val defaultAdherentActionsFun: (Card, Player, Player) -> List<CardAction> = { triggeringCard, (handCards, _, tableCards), enemyPlayer ->
+    triggeringCard as AdherentCard // smart casting
+    val availableActions = mutableListOf<CardAction>()
 
-    enemyPlayer.tableCards.forEach {
-        availableActions += HitOne(triggeringCard, it, (triggeringCard as AdherentCard).attackStrength)
+    if (triggeringCard in handCards) {
+        availableActions += PlaceAdherentCard(triggeringCard)
+    } else if (triggeringCard in tableCards && !triggeringCard.hasBeenUsedInCurrentTurn) {
+        enemyPlayer.tableCards.forEach { enemyCard ->
+            availableActions += FightAnotherAdherent(triggeringCard, enemyCard)
+        }
+        availableActions += FightEnemyHero(triggeringCard)
     }
 
-    if(isInHand) availableActions += DrawCard(triggeringCard)
     availableActions
 }
 
 class AdherentCard(
         val maxHealthPoints: Int,
         var attackStrength: Int,
-        var lastTurnPlaced: Int = -1,
+        var hasBeenUsedInCurrentTurn: Boolean = false,
         name: String,
         manaCost: Int
 ) : Card(name, manaCost, defaultAdherentActionsFun) {
 
     var currentHealthPoints: Int = maxHealthPoints
 
+    override fun toString() = "name($name), manaCost($manaCost), wasUsedInThisTurn($hasBeenUsedInCurrentTurn)"
 }
