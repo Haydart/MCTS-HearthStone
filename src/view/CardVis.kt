@@ -1,39 +1,54 @@
 package view
 
-import javafx.event.EventHandler
 import javafx.scene.control.Label
-import javafx.scene.input.MouseEvent
 import javafx.scene.layout.StackPane
 import javafx.scene.paint.Color
 import javafx.scene.shape.Rectangle
 import javafx.scene.text.Font
 import javafx.scene.text.FontWeight
+import models.AdherentCard
 import models.Card
 
 class CardVis(var cardModel: Card) : StackPane(){
 
+    var isCardActive: Boolean = false
+    var isCardSelected: Boolean = false
+    lateinit var textLabel: Label
+    lateinit var background: Rectangle
+
     init {
-        val rect = Rectangle(0.0, 0.0, 80.0, 80.0)
-        rect.fill = Color.LIGHTBLUE
+        background = Rectangle(0.0, 0.0, 80.0, 80.0)
+        background.fill = Color.LIGHTBLUE
 
-        rect.setOnMouseClicked(object : EventHandler<MouseEvent> {
-            override fun handle(event: MouseEvent?) {
-                println("aaa")
-                rect.y += 50.0
-                rect.width += 50
-                rect.height += 50
-            }
-        })
+        this.children.add(background)
 
-        this.children.add(rect)
+        textLabel = Label(getLabelText())
+        textLabel.font = Font.font("Serif", FontWeight.NORMAL, 10.0)
 
-        val l = Label(cardModel.name)
-        l.font = Font.font("Serif", FontWeight.NORMAL, 10.0)
+        this.children.add(textLabel)
+    }
 
-        this.children.add(l)
+    fun update() {
+        textLabel.text = getLabelText()
+        background.fill = if (isCardSelected) Color.GREEN else if (isCardActive) Color.LIGHTGREEN else Color.LIGHTBLUE
+    }
+
+    fun getLabelText(): String {
+        var newText: String = "${cardModel.name}\nCost: ${cardModel.manaCost}"
+        if (cardModel is AdherentCard) {
+            newText += "\nHealth:${(cardModel as AdherentCard).currentHealthPoints}/${(cardModel as AdherentCard).maxHealthPoints}"
+            newText += "\nAttack:${(cardModel as AdherentCard).attackStrength}"
+        }
+        return newText
     }
 
     fun setActive(isActive: Boolean) {
-        (this.children.last() as Label).font = Font.font("Serif", if (isActive) FontWeight.EXTRA_BOLD else FontWeight.NORMAL, 10.0)
+        isCardActive = isActive
+        update()
+    }
+
+    fun setSelected(isSelected: Boolean) {
+        isCardSelected = isSelected
+        update()
     }
 }
