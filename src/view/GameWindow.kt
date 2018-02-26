@@ -151,137 +151,131 @@ class GameWindow: Application() {
         }
     }
 
+    private fun createActionMarker(card: CardVis, cardAction: CardAction, state: GameState): Pair<Action, Circle> {
+        val windowHandle = this
+        lateinit var actionMarker: Pair<Action, Circle>
+        when (cardAction) {
+            is PlaceAdherentCard -> {
+                val markerVis = Circle(boardRoot.width / 2, boardRoot.height / 2, ACTION_MARKER_RADIUS)
+                actionMarker = Pair<Action, Circle>(cardAction, markerVis)
+                markerVis.onMouseClicked = EventHandler<MouseEvent> {
+                    cardAction.resolve(state)
+                    windowHandle.deployCard(card)
+                    windowHandle.onActionPlayed()
+                }
+            }
+            is HitOne -> {
+                val otherAdherent = cardAction.targetCard
+                lateinit var otherVis: CardVis
+                getEnemyTableVis(state).children.forEach {
+                    if ((it as CardVis).cardModel == otherAdherent) {
+                        otherVis = it
+                    }
+                }
+                val boundsInScene = otherVis.localToScene(otherVis.getBoundsInLocal())
+                val markerVis = Circle(boundsInScene.minX + boundsInScene.width / 2, boundsInScene.minY + boundsInScene.height / 2, ACTION_MARKER_RADIUS)
+                actionMarker = Pair<Action, Circle>(cardAction, markerVis)
+
+                markerVis.onMouseClicked = EventHandler<MouseEvent> {
+                    cardAction.resolve(state)
+                    windowHandle.discardCard(card)
+                    otherVis.update()
+                    if (otherAdherent.currentHealthPoints <= 0) {
+                        getEnemyTableVis(state).children.remove(otherVis)
+                    }
+                    windowHandle.onActionPlayed()
+                }
+            }
+            is HitAllEnemies -> {
+                val enemyTable = getEnemyTableVis(state)
+                val boundsInScene = enemyTable.localToScene(enemyTable.getBoundsInLocal())
+                val markerVis = Circle(boundsInScene.minX + boundsInScene.width / 2, boundsInScene.minY + boundsInScene.height / 2, ACTION_MARKER_RADIUS)
+                actionMarker = Pair<Action, Circle>(cardAction, markerVis)
+
+                markerVis.onMouseClicked = EventHandler<MouseEvent> {
+                    cardAction.resolve(state)
+                    windowHandle.discardCard(card)
+
+                    enemyTable.children.forEach {
+                        (it as CardVis).update()
+                    }
+
+                    enemyTable.children.removeIf {
+                        ((it as CardVis).cardModel as AdherentCard).currentHealthPoints <= 0
+                    }
+
+                    windowHandle.onActionPlayed()
+                }
+            }
+            is HealAll -> {
+
+                val markerVis = Circle(boardRoot.width / 2, boardRoot.height / 2, ACTION_MARKER_RADIUS)
+                actionMarker = Pair<Action, Circle>(cardAction, markerVis)
+
+                markerVis.onMouseClicked = EventHandler<MouseEvent> {
+                    cardAction.resolve(state)
+                    windowHandle.discardCard(card)
+
+                    handPlayer1.children.forEach {
+                        (it as CardVis).update()
+                    }
+
+                    handPlayer2.children.forEach {
+                        (it as CardVis).update()
+                    }
+
+                    windowHandle.onActionPlayed()
+                }
+            }
+            is FightAnotherAdherent -> {
+                val otherAdherent = cardAction.targetCard
+                lateinit var otherVis: CardVis
+                getEnemyTableVis(state).children.forEach {
+                    if ((it as CardVis).cardModel == otherAdherent) {
+                        otherVis = it
+                    }
+                }
+                val boundsInScene = otherVis.localToScene(otherVis.getBoundsInLocal())
+                val markerVis = Circle(boundsInScene.minX + boundsInScene.width / 2, boundsInScene.minY + boundsInScene.height / 2, ACTION_MARKER_RADIUS)
+                actionMarker = Pair<Action, Circle>(cardAction, markerVis)
+
+                markerVis.onMouseClicked = EventHandler<MouseEvent> {
+                    cardAction.resolve(state)
+
+                    otherVis.update()
+                    card.update()
+
+                    if (otherAdherent.currentHealthPoints <= 0) {
+                        getEnemyTableVis(state).children.remove(otherVis)
+                    }
+
+                    if ((card.cardModel as AdherentCard).currentHealthPoints <= 0) {
+                        getActiveTableVis(state).children.remove(card)
+                    }
+
+                    windowHandle.onActionPlayed()
+                }
+            }
+            else -> {
+                throw IllegalStateException("Action: $cardAction  triggered by Card: ${card.cardModel}  is not handled in visualisation")
+            }
+        }
+
+        return actionMarker
+    }
+
     private fun onCardClicked(card: CardVis) {
         selectedCard?.setSelected(false)
         selectedCard = card
         card.setSelected(true)
 
-        val windowHandle = this
-
         gGameInstance?.let {
             val actions = card.cardModel.getActionsFun(card.cardModel, it.gameState.activePlayer, it.gameState.getOpponent(it.gameState.activePlayer))
             val state = it.gameState
             actions.forEach {
-                val cardAction = it
-                when (cardAction) {
-                    is PlaceAdherentCard -> {
-                        val markerVis = Circle(boardRoot.width / 2, boardRoot.height / 2, ACTION_MARKER_RADIUS)
-                        val marker = Pair<Action, Circle>(it, markerVis)
-                        markerVis.onMouseClicked = EventHandler<MouseEvent> {
-                            cardAction.resolve(state)
-                            windowHandle.deployCard(card)
-                            windowHandle.onActionPlayed()
-                        }
-
-                        availableActionsVis.add(marker)
-                        boardRoot.children.add(marker.second)
-                    }
-                    is HitOne -> {
-                        val otherAdherent = cardAction.targetCard
-                        lateinit var otherVis: CardVis
-                        getEnemyTableVis(state).children.forEach {
-                            if ((it as CardVis).cardModel == otherAdherent) {
-                                otherVis = it
-                            }
-                        }
-                        val boundsInScene = otherVis.localToScene(otherVis.getBoundsInLocal())
-                        val markerVis = Circle(boundsInScene.minX + boundsInScene.width / 2, boundsInScene.minY + boundsInScene.height / 2, ACTION_MARKER_RADIUS)
-                        val marker = Pair<Action, Circle>(cardAction, markerVis)
-
-                        markerVis.onMouseClicked = EventHandler<MouseEvent> {
-                            cardAction.resolve(state)
-                            windowHandle.discardCard(card)
-                            otherVis.update()
-                            if (otherAdherent.currentHealthPoints <= 0) {
-                                getEnemyTableVis(state).children.remove(otherVis)
-                            }
-                            windowHandle.onActionPlayed()
-                        }
-
-                        availableActionsVis.add(marker)
-                        boardRoot.children.add(marker.second)
-                    }
-                    is HitAllEnemies -> {
-                        val enemyTable = getEnemyTableVis(state)
-                        val boundsInScene = enemyTable.localToScene(enemyTable.getBoundsInLocal())
-                        val markerVis = Circle(boundsInScene.minX + boundsInScene.width / 2, boundsInScene.minY + boundsInScene.height / 2, ACTION_MARKER_RADIUS)
-                        val marker = Pair<Action, Circle>(it, markerVis)
-
-                        markerVis.onMouseClicked = EventHandler<MouseEvent> {
-                            cardAction.resolve(state)
-                            windowHandle.discardCard(card)
-
-                            enemyTable.children.forEach {
-                                (it as CardVis).update()
-                            }
-
-                            enemyTable.children.removeIf {
-                                ((it as CardVis).cardModel as AdherentCard).currentHealthPoints <= 0
-                            }
-
-                            windowHandle.onActionPlayed()
-                        }
-
-                        availableActionsVis.add(marker)
-                        boardRoot.children.add(marker.second)
-
-                    }
-                    is HealAll -> {
-
-                        val markerVis = Circle(boardRoot.width / 2, boardRoot.height / 2, ACTION_MARKER_RADIUS)
-                        val marker = Pair<Action, Circle>(it, markerVis)
-
-                        markerVis.onMouseClicked = EventHandler<MouseEvent> {
-                            cardAction.resolve(state)
-                            windowHandle.discardCard(card)
-
-                            handPlayer1.children.forEach {
-                                (it as CardVis).update()
-                            }
-
-                            handPlayer2.children.forEach {
-                                (it as CardVis).update()
-                            }
-
-                            windowHandle.onActionPlayed()
-                        }
-
-                        availableActionsVis.add(marker)
-                        boardRoot.children.add(marker.second)
-                    }
-                    is FightAnotherAdherent -> {
-                        val otherAdherent = cardAction.targetCard
-                        lateinit var otherVis: CardVis
-                        getEnemyTableVis(state).children.forEach {
-                            if ((it as CardVis).cardModel == otherAdherent) {
-                                otherVis = it
-                            }
-                        }
-                        val boundsInScene = otherVis.localToScene(otherVis.getBoundsInLocal())
-                        val markerVis = Circle(boundsInScene.minX + boundsInScene.width / 2, boundsInScene.minY + boundsInScene.height / 2, ACTION_MARKER_RADIUS)
-                        val marker = Pair<Action, Circle>(it, markerVis)
-
-                        markerVis.onMouseClicked = EventHandler<MouseEvent> {
-                            cardAction.resolve(state)
-
-                            otherVis.update()
-                            card.update()
-
-                            if (otherAdherent.currentHealthPoints <= 0) {
-                                getEnemyTableVis(state).children.remove(otherVis)
-                            }
-
-                            if ((card.cardModel as AdherentCard).currentHealthPoints <= 0) {
-                                getActiveTableVis(state).children.remove(card)
-                            }
-
-                            windowHandle.onActionPlayed()
-                        }
-
-                        availableActionsVis.add(marker)
-                        boardRoot.children.add(marker.second)
-                    }
-                }
+                val actionMarker = createActionMarker(card, it, state)
+                availableActionsVis.add(actionMarker)
+                boardRoot.children.add(actionMarker.second)
             }
         }
     }
