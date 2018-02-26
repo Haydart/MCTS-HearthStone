@@ -3,10 +3,18 @@ import actions.HealAll
 import actions.HitAllEnemies
 import actions.HitOne
 import models.*
+import view.GameWindow
 
 /**
  * Created by r.makowiecki on 23/02/2018.
  */
+
+var gGameInstance: Game? = null
+
+enum class GameMode {
+    TEXT,
+    GUI
+}
 
 fun main(args: Array<String>) {
 
@@ -28,7 +36,19 @@ fun main(args: Array<String>) {
             name = "Player2"
     )
 
-    Game(GameState(player1, player2, turnNumber = 0, activePlayer = player1)).run()
+    val gameInstance = Game(GameState(player1, player2, turnNumber = 0, activePlayer = player1))
+    gGameInstance = gameInstance
+
+    val gameMode = GameMode.GUI
+    when (gameMode) {
+        GameMode.TEXT -> {
+            gameInstance.run()
+        }
+        GameMode.GUI -> {
+            val gameWindow = GameWindow()
+            gameWindow.launchWindow(args)
+        }
+    }
 }
 
 fun createInitialDeck(): MutableList<Card> = mutableListOf<Card>().apply {

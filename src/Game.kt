@@ -57,7 +57,7 @@ class Game(var gameState: GameState) {
         println("------ Turn ended ------")
     }
 
-    private fun drawCardOrGetPunished(currentPlayer: Player) {
+    fun drawCardOrGetPunished(currentPlayer: Player) {
         if (currentPlayer.deckCards.size > 0) {
             currentPlayer.takeCardFromDeck()
         } else {
