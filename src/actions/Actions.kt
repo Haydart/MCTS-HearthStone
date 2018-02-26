@@ -96,7 +96,7 @@ class FightAnotherAdherent(override val triggeringCard: AdherentCard, val target
         }
 
         if (triggeringCard.currentHealthPoints <= 0) {
-            val removedAt = activePlayer.tableCards.indexOf(targetCard)
+            val removedAt = activePlayer.tableCards.indexOf(triggeringCard)
             val removedAdherent = activePlayer.tableCards.removeAt(removedAt)
             activePlayerKilledAdherent = Pair(removedAt, removedAdherent)
         }
