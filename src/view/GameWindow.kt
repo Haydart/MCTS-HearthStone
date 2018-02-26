@@ -16,7 +16,7 @@ import javafx.scene.shape.Circle
 import models.AdherentCard
 
 const val PLAYER_TABLE_HEIGHT = 150.0
-const val PLAYER_HAND_HEIGHT = 150.0
+const val PLAYER_HAND_HEIGHT = 100.0
 
 class GameWindow: Application() {
 
@@ -44,13 +44,13 @@ class GameWindow: Application() {
 
         handPlayer2 = HBox(5.0)
         handPlayer2.alignment = Pos.CENTER
+        handPlayer2.minHeight = PLAYER_HAND_HEIGHT
         boardRoot.top = handPlayer2
-        boardRoot.top.minHeight(150.0)
 
         handPlayer1 = HBox(5.0)
         handPlayer1.alignment = Pos.CENTER
+        handPlayer1.minHeight = PLAYER_HAND_HEIGHT
         boardRoot.bottom = handPlayer1
-        boardRoot.bottom.minHeight(150.0)
 
         gGameInstance?.let {
             val leftPanel = BorderPane()
@@ -127,8 +127,21 @@ class GameWindow: Application() {
 
     fun onNextBtnCalled() {
         gGameInstance?.let {
+
+            // force EndTurn action
+            val endAction = EndTurn()
+            endAction.resolve(it.gameState)
+
+            // force change active player (possibly may take place in EndTurn action)
             it.gameState.activePlayer = it.gameState.getOpponent(it.gameState.activePlayer)
-            it.gameState.activePlayer.mana += 1
+
+            // force increment game turn (possibly may take place in EndTurn action)
+            it.gameState.turnNumber++
+
+            // force active player mana update (possibly may take place in EndTurn action)
+            it.gameState.activePlayer.mana = (it.gameState.turnNumber - 1) / 2 + 1
+
+            // update board
             selectedCard?.setSelected(false)
             selectedCard = null
             updateBoard(it.gameState)
@@ -237,6 +250,7 @@ class GameWindow: Application() {
 
                 }
                 else if (it is FightAnotherAdherent) {
+                    println("Adh")
                     val otherAdherent = it.targetCard
                     lateinit var otherVis: CardVis
                     getEnemyTableVis(state).children.forEach {
@@ -251,6 +265,18 @@ class GameWindow: Application() {
                     markerVis.setOnMouseClicked(object : EventHandler<MouseEvent> {
                         override fun handle(event: MouseEvent?) {
                             it.resolve(state)
+
+                            otherVis.update()
+                            card.update()
+
+                            if (otherAdherent.currentHealthPoints <= 0) {
+                                getEnemyTableVis(state).children.remove(otherVis)
+                            }
+
+                            if ((card.cardModel as AdherentCard).currentHealthPoints <= 0) {
+                                getActiveTableVis(state).children.remove(card)
+                            }
+
                             windowHandle.onActionPlayed()
                         }
                     })
@@ -306,7 +332,7 @@ class GameWindow: Application() {
             vis.setActive(false)
         }
 
-        getEnemyHandVis(state).children.forEach {
+        getEnemyTableVis(state).children.forEach {
             val vis: CardVis = (it as CardVis)
             vis.setActive(false)
         }
@@ -321,8 +347,7 @@ class GameWindow: Application() {
         getActiveTableVis(state).children.forEach {
             val vis: CardVis = (it as CardVis)
 
-            vis.setActive(vis.cardModel.manaCost <= state.activePlayer.mana &&
-                    vis.cardModel.getActionsFun(vis.cardModel, state.activePlayer, state.getOpponent(state.activePlayer)).isNotEmpty())
+            vis.setActive(vis.cardModel.getActionsFun(vis.cardModel, state.activePlayer, state.getOpponent(state.activePlayer)).isNotEmpty())
         }
     }
 
