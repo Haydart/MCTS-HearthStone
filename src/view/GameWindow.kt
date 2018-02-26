@@ -14,6 +14,7 @@ import javafx.scene.layout.*
 import javafx.event.ActionEvent
 import javafx.scene.shape.Circle
 import models.AdherentCard
+import models.Card
 import models.Player
 
 const val PLAYER_TABLE_HEIGHT = 150.0
@@ -46,20 +47,24 @@ class GameWindow: Application() {
         playerVis.alignment = Pos.CENTER
         playerVis.minHeight = PLAYER_HAND_HEIGHT
 
-        val windowHandle = this
         playerModel.handCards.forEach {
-            val card = CardVis(it)
-
-            card.onMouseClicked = EventHandler<MouseEvent> {
-                if (card.isCardActive) {
-                    windowHandle.onCardClicked(card)
-                }
-            }
-
-            playerVis.children.add(card)
+            playerVis.children.add(createCardVis(it))
         }
 
         return playerVis
+    }
+
+    private fun createCardVis(cardModel: Card): CardVis {
+        val windowHandle = this
+        val card = CardVis(cardModel)
+
+        card.onMouseClicked = EventHandler<MouseEvent> {
+            if (card.isCardActive) {
+                windowHandle.onCardClicked(card)
+            }
+        }
+
+        return card
     }
 
     private fun initPlayerHandUI() {
@@ -130,24 +135,33 @@ class GameWindow: Application() {
 
     fun onNextBtnCalled() {
         gGameInstance?.let {
+            val state = it.gameState
 
             // force EndTurn action
             val endAction = EndTurn()
-            endAction.resolve(it.gameState)
+            endAction.resolve(state)
 
             // force change active player (possibly may take place in EndTurn action)
-            it.gameState.activePlayer = it.gameState.getOpponent(it.gameState.activePlayer)
+            state.activePlayer = state.getOpponent(state.activePlayer)
 
             // force increment game turn (possibly may take place in EndTurn action)
-            it.gameState.turnNumber++
+            state.turnNumber++
 
             // force active player mana update (possibly may take place in EndTurn action)
-            it.gameState.activePlayer.mana = (it.gameState.turnNumber - 1) / 2 + 1
+            state.activePlayer.mana = (state.turnNumber - 1) / 2 + 1
+
+            //it might be handled in other way if we choose to force update everything instead of just selected board items
+            val inHandBeforeDraw = state.activePlayer.handCards.size
+            it.drawCardOrGetPunished(state.activePlayer)
+            val inHandAfterDraw = state.activePlayer.handCards.size
+            if (inHandAfterDraw > inHandBeforeDraw) {
+                getActiveHandVis(state).children.add(createCardVis(state.activePlayer.handCards.last()))
+            }
 
             // update board
             selectedCard?.setSelected(false)
             selectedCard = null
-            updateBoard(it.gameState)
+            updateBoard(state)
         }
     }
 
