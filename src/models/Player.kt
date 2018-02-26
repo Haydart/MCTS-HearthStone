@@ -1,8 +1,11 @@
 package models
 
 import actions.Action
-import actions.DrawCard
+import actions.CardAction
+import actions.EndTurn
+import actions.PlaceAdherentCard
 import java.util.*
+
 
 /**
  * Created by r.makowiecki on 23/02/2018.
@@ -23,7 +26,7 @@ data class Player(
     var discardedCount = 0
 
     fun getAvailableActions(enemyPlayer: Player): List<Action> {
-        val actionsListBeforeConstraining = mutableListOf<Action>()
+        val actionsListBeforeConstraining = mutableListOf<CardAction>()
 
         handCards.forEach {
             actionsListBeforeConstraining += it.getActionsFun(it, this, enemyPlayer)
@@ -33,9 +36,16 @@ data class Player(
         }
 
         return actionsListBeforeConstraining
-                .filter { mana >= it.triggeringCard.manaCost }
-                .filter { it !is DrawCard || tableCards.size < MAX_ADHERENT_CARDS_LAID_OUT }
+                .filter(this::userCanAffordTheCardIfInHand)
+                .filter(this::placedAdherentCardsCountIsBelowLimit)
+                .filter(this::cardWasNotUsedInCurrentTurn) + EndTurn()
     }
+
+    private fun userCanAffordTheCardIfInHand(action: CardAction) = mana >= action.triggeringCard.manaCost || action.triggeringCard in tableCards
+
+    private fun placedAdherentCardsCountIsBelowLimit(action: CardAction) = action !is PlaceAdherentCard || tableCards.size < MAX_ADHERENT_CARDS_LAID_OUT
+
+    private fun cardWasNotUsedInCurrentTurn(action: CardAction) = action.triggeringCard !is AdherentCard || !(action.triggeringCard as AdherentCard).hasBeenUsedInCurrentTurn
 
     fun takeCardFromDeck() = handCards.add(deckCards.takeRandomElement())
 

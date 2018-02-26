@@ -1,4 +1,4 @@
-import actions.Action
+import actions.CardAction
 import actions.HealAll
 import actions.HitAllEnemies
 import actions.HitOne
@@ -54,27 +54,20 @@ fun createInitialDeck(): MutableList<Card> = mutableListOf<Card>().apply {
     }
 }
 
-val dragonBreathEffect: (Card, Player, Player) -> List<Action> = { triggeringCard, _, enemyPlayer ->
-    enemyPlayer.tableCards.forEach {
-        it.currentHealthPoints -= 1
-    }
-    listOf(HitAllEnemies(triggeringCard, 2))
+val dragonBreathEffect: (Card, Player, Player) -> List<CardAction> = { triggeringCard, _, enemyPlayer ->
+    listOf(HitAllEnemies(triggeringCard, damage = 2))
 }
 
-val circleOfHealingEffect: (Card, Player, Player) -> List<Action> = { triggeringCard, currentPlayer, enemyPlayer ->
+val circleOfHealingEffect: (Card, Player, Player) -> List<CardAction> = { triggeringCard, currentPlayer, enemyPlayer ->
     val allTableCards = mutableListOf<AdherentCard>()
     currentPlayer.tableCards.forEach { allTableCards.add(it) }
     enemyPlayer.tableCards.forEach { allTableCards.add(it) }
 
-    allTableCards.forEach {
-        it.currentHealthPoints += 1
-        it.currentHealthPoints = maxOf(it.maxHealthPoints, it.currentHealthPoints)
-    }
-    listOf(HealAll(triggeringCard, 3))
+    listOf(HealAll(triggeringCard, healAmount = 3))
 }
 
-val flameLanceEffect: (Card, Player, Player) -> List<Action> = { triggeringCard, _, enemyPlayer ->
-    val actionList = mutableListOf<Action>()
+val flameLanceEffect: (Card, Player, Player) -> List<CardAction> = { triggeringCard, _, enemyPlayer ->
+    val actionList = mutableListOf<CardAction>()
     enemyPlayer.tableCards.forEach {
         actionList.add(HitOne(triggeringCard, it, 4))
     }
