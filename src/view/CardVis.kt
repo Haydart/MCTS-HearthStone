@@ -9,6 +9,9 @@ import javafx.scene.text.FontWeight
 import models.AdherentCard
 import models.Card
 
+const val CARD_SIZE = 80.0
+const val CARD_TEXT_SIZE = 10.0
+
 class CardVis(var cardModel: Card) : StackPane(){
 
     var isCardActive: Boolean = false
@@ -17,13 +20,13 @@ class CardVis(var cardModel: Card) : StackPane(){
     lateinit var background: Rectangle
 
     init {
-        background = Rectangle(0.0, 0.0, 80.0, 80.0)
+        background = Rectangle(0.0, 0.0, CARD_SIZE, CARD_SIZE)
         background.fill = Color.LIGHTBLUE
 
         this.children.add(background)
 
         textLabel = Label(getLabelText())
-        textLabel.font = Font.font("Serif", FontWeight.NORMAL, 10.0)
+        textLabel.font = Font.font("Serif", FontWeight.NORMAL, CARD_TEXT_SIZE)
 
         this.children.add(textLabel)
     }

@@ -8,19 +8,22 @@ import javafx.scene.text.Font
 import javafx.scene.text.FontWeight
 import models.Player
 
+const val PLAYER_SIZE = 80.0
+const val PLAYER_TEXT_SIZE = 10.0
+
 class PlayerVis(val player: Player) : StackPane(){
 
     lateinit var textLabel: Label
     lateinit var background: Rectangle
 
     init {
-        background = Rectangle(0.0, 0.0, 80.0, 80.0)
+        background = Rectangle(0.0, 0.0, PLAYER_SIZE, PLAYER_SIZE)
         background.fill = Color.LIGHTBLUE
 
         this.children.add(background)
 
         textLabel = Label(getLabelText())
-        textLabel.font = Font.font("Serif", FontWeight.NORMAL, 10.0)
+        textLabel.font = Font.font("Serif", FontWeight.NORMAL, PLAYER_TEXT_SIZE)
 
         this.children.add(textLabel)
     }

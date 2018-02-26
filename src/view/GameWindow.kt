@@ -17,6 +17,11 @@ import models.AdherentCard
 
 const val PLAYER_TABLE_HEIGHT = 150.0
 const val PLAYER_HAND_HEIGHT = 100.0
+const val SCENE_WIDTH = 900.0
+const val SCENE_HEIGHT = 600.0
+const val HAND_SPACING = 5.0
+const val TABLE_SPACING = 25.0
+const val ACTION_MARKER_RADIUS = 20.0
 
 class GameWindow: Application() {
 
@@ -42,12 +47,12 @@ class GameWindow: Application() {
         val battleground = VBox(5.0)
         boardRoot.center = battleground
 
-        handPlayer2 = HBox(5.0)
+        handPlayer2 = HBox(HAND_SPACING)
         handPlayer2.alignment = Pos.CENTER
         handPlayer2.minHeight = PLAYER_HAND_HEIGHT
         boardRoot.top = handPlayer2
 
-        handPlayer1 = HBox(5.0)
+        handPlayer1 = HBox(HAND_SPACING)
         handPlayer1.alignment = Pos.CENTER
         handPlayer1.minHeight = PLAYER_HAND_HEIGHT
         boardRoot.bottom = handPlayer1
@@ -67,9 +72,9 @@ class GameWindow: Application() {
         })
         boardRoot.right = nextTurnBtn
 
-        val scene = Scene(boardRoot, 900.0, 600.0)
+        val scene = Scene(boardRoot, SCENE_WIDTH, SCENE_HEIGHT)
 
-        tablePlayer2 = HBox(25.0)
+        tablePlayer2 = HBox(TABLE_SPACING)
         tablePlayer2.minHeight = PLAYER_TABLE_HEIGHT
         battleground.children.add(tablePlayer2)
         battleground.alignment = Pos.CENTER
@@ -93,7 +98,7 @@ class GameWindow: Application() {
             }
         }
 
-        tablePlayer1 = HBox(25.0)
+        tablePlayer1 = HBox(TABLE_SPACING)
         tablePlayer1.minHeight = PLAYER_TABLE_HEIGHT
         tablePlayer1.alignment = Pos.CENTER
         battleground.children.add(tablePlayer1)
@@ -160,7 +165,7 @@ class GameWindow: Application() {
             val state = it.gameState
             actions.forEach {
                 if (it is PlaceAdherentCard) {
-                    val markerVis = Circle(boardRoot.width / 2, boardRoot.height / 2, 20.0)
+                    val markerVis = Circle(boardRoot.width / 2, boardRoot.height / 2, ACTION_MARKER_RADIUS)
                     val marker = Pair<Action, Circle>(it, markerVis)
                     markerVis.setOnMouseClicked(object : EventHandler<MouseEvent> {
                         override fun handle(event: MouseEvent?) {
@@ -181,7 +186,7 @@ class GameWindow: Application() {
                         }
                     }
                     val boundsInScene = otherVis.localToScene(otherVis.getBoundsInLocal())
-                    val markerVis = Circle(boundsInScene.minX + boundsInScene.width / 2, boundsInScene.minY + boundsInScene.height / 2, 20.0)
+                    val markerVis = Circle(boundsInScene.minX + boundsInScene.width / 2, boundsInScene.minY + boundsInScene.height / 2, ACTION_MARKER_RADIUS)
                     val marker = Pair<Action, Circle>(it, markerVis)
 
                     markerVis.setOnMouseClicked(object : EventHandler<MouseEvent> {
@@ -201,7 +206,7 @@ class GameWindow: Application() {
                 else if (it is HitAllEnemies) {
                     val enemyTable = getEnemyTableVis(state)
                     val boundsInScene = enemyTable.localToScene(enemyTable.getBoundsInLocal())
-                    val markerVis = Circle(boundsInScene.minX + boundsInScene.width / 2, boundsInScene.minY + boundsInScene.height / 2, 20.0)
+                    val markerVis = Circle(boundsInScene.minX + boundsInScene.width / 2, boundsInScene.minY + boundsInScene.height / 2, ACTION_MARKER_RADIUS)
                     val marker = Pair<Action, Circle>(it, markerVis)
 
                     markerVis.setOnMouseClicked(object : EventHandler<MouseEvent> {
@@ -226,7 +231,7 @@ class GameWindow: Application() {
                 }
                 else if (it is HealAll) {
 
-                    val markerVis = Circle(boardRoot.width / 2, boardRoot.height / 2, 20.0)
+                    val markerVis = Circle(boardRoot.width / 2, boardRoot.height / 2, ACTION_MARKER_RADIUS)
                     val marker = Pair<Action, Circle>(it, markerVis)
 
                     markerVis.setOnMouseClicked(object : EventHandler<MouseEvent> {
@@ -259,7 +264,7 @@ class GameWindow: Application() {
                         }
                     }
                     val boundsInScene = otherVis.localToScene(otherVis.getBoundsInLocal())
-                    val markerVis = Circle(boundsInScene.minX + boundsInScene.width / 2, boundsInScene.minY + boundsInScene.height / 2, 20.0)
+                    val markerVis = Circle(boundsInScene.minX + boundsInScene.width / 2, boundsInScene.minY + boundsInScene.height / 2, ACTION_MARKER_RADIUS)
                     val marker = Pair<Action, Circle>(it, markerVis)
 
                     markerVis.setOnMouseClicked(object : EventHandler<MouseEvent> {
