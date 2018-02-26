@@ -14,6 +14,7 @@ import javafx.scene.layout.*
 import javafx.event.ActionEvent
 import javafx.scene.shape.Circle
 import models.AdherentCard
+import models.Player
 
 const val PLAYER_TABLE_HEIGHT = 150.0
 const val PLAYER_HAND_HEIGHT = 100.0
@@ -40,23 +41,62 @@ class GameWindow: Application() {
         initUI(stage)
     }
 
-    private fun initUI(stage: Stage) {
+    private fun createPlayerHand(playerModel: Player): HBox {
+        val playerVis = HBox(HAND_SPACING)
+        playerVis.alignment = Pos.CENTER
+        playerVis.minHeight = PLAYER_HAND_HEIGHT
 
-        boardRoot = BorderPane()
+        val windowHandle = this
+        playerModel.handCards.forEach {
+            val card = CardVis(it)
 
-        val battleground = VBox(5.0)
-        boardRoot.center = battleground
+            card.onMouseClicked = EventHandler<MouseEvent> {
+                if (card.isCardActive) {
+                    windowHandle.onCardClicked(card)
+                }
+            }
 
-        handPlayer2 = HBox(HAND_SPACING)
-        handPlayer2.alignment = Pos.CENTER
-        handPlayer2.minHeight = PLAYER_HAND_HEIGHT
-        boardRoot.top = handPlayer2
+            playerVis.children.add(card)
+        }
 
-        handPlayer1 = HBox(HAND_SPACING)
-        handPlayer1.alignment = Pos.CENTER
-        handPlayer1.minHeight = PLAYER_HAND_HEIGHT
-        boardRoot.bottom = handPlayer1
+        return playerVis
+    }
 
+    private fun initPlayerHandUI() {
+
+        gGameInstance?.let {
+            handPlayer2 = createPlayerHand(it.gameState.player2)
+            boardRoot.top = handPlayer2
+            handPlayer1 = createPlayerHand(it.gameState.player1)
+            boardRoot.bottom = handPlayer1
+        }
+    }
+
+    private fun initNextTurnBtnUI() {
+        val nextTurnBtn: Button = Button("Next Turn!")
+        nextTurnBtn.setOnAction({ event: ActionEvent ->
+            onNextBtnCalled()
+        })
+        boardRoot.right = nextTurnBtn
+    }
+
+    private fun initTableUI() {
+        val table = VBox(5.0)
+        boardRoot.center = table
+        table.alignment = Pos.CENTER
+
+        tablePlayer2 = HBox(TABLE_SPACING)
+        tablePlayer2.minHeight = PLAYER_TABLE_HEIGHT
+        tablePlayer2.alignment = Pos.CENTER
+        table.children.add(tablePlayer2)
+
+        tablePlayer1 = HBox(TABLE_SPACING)
+        tablePlayer1.minHeight = PLAYER_TABLE_HEIGHT
+        tablePlayer1.alignment = Pos.CENTER
+        table.children.add(tablePlayer1)
+    }
+
+    private fun initLeftPanelUI() {
         gGameInstance?.let {
             val leftPanel = BorderPane()
             boardRoot.left = leftPanel
@@ -65,60 +105,18 @@ class GameWindow: Application() {
             player2Vis = PlayerVis(it.gameState.player2)
             leftPanel.top = player2Vis
         }
+    }
 
-        val nextTurnBtn: Button = Button("Next Turn!")
-        nextTurnBtn.setOnAction({ event: ActionEvent ->
-            onNextBtnCalled()
-        })
-        boardRoot.right = nextTurnBtn
+    private fun initUI(stage: Stage) {
+
+        boardRoot = BorderPane()
+
+        initPlayerHandUI()
+        initLeftPanelUI()
+        initNextTurnBtnUI()
+        initTableUI()
 
         val scene = Scene(boardRoot, SCENE_WIDTH, SCENE_HEIGHT)
-
-        tablePlayer2 = HBox(TABLE_SPACING)
-        tablePlayer2.minHeight = PLAYER_TABLE_HEIGHT
-        battleground.children.add(tablePlayer2)
-        battleground.alignment = Pos.CENTER
-        tablePlayer2.alignment = Pos.CENTER
-
-        val windowHandle = this
-        gGameInstance?.let {
-            val gameState = it.gameState
-            gameState.player1.handCards.forEach {
-                val card = CardVis(it)
-
-                card.setOnMouseClicked(object : EventHandler<MouseEvent> {
-                    override fun handle(event: MouseEvent?) {
-                        if (card.isCardActive) {
-                            windowHandle.onCardClicked(card)
-                        }
-                    }
-                })
-
-                handPlayer1.children.add(card)
-            }
-        }
-
-        tablePlayer1 = HBox(TABLE_SPACING)
-        tablePlayer1.minHeight = PLAYER_TABLE_HEIGHT
-        tablePlayer1.alignment = Pos.CENTER
-        battleground.children.add(tablePlayer1)
-
-        gGameInstance?.let {
-            val gameState = it.gameState
-            gameState.player2.handCards.forEach {
-                val card = CardVis(it)
-
-                card.setOnMouseClicked(object : EventHandler<MouseEvent> {
-                    override fun handle(event: MouseEvent?) {
-                        if (card.isCardActive) {
-                            windowHandle.onCardClicked(card)
-                        }
-                    }
-                })
-
-                handPlayer2.children.add(card)
-            }
-        }
 
         gGameInstance?.let{
 
