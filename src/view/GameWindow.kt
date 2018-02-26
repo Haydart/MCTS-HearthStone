@@ -172,7 +172,7 @@ class GameWindow: Application() {
                         otherVis = it
                     }
                 }
-                val boundsInScene = otherVis.localToScene(otherVis.getBoundsInLocal())
+                val boundsInScene = otherVis.localToScene(otherVis.boundsInLocal)
                 val markerVis = Circle(boundsInScene.minX + boundsInScene.width / 2, boundsInScene.minY + boundsInScene.height / 2, ACTION_MARKER_RADIUS)
                 actionMarker = Pair<Action, Circle>(cardAction, markerVis)
 
@@ -188,7 +188,7 @@ class GameWindow: Application() {
             }
             is HitAllEnemies -> {
                 val enemyTable = getEnemyTableVis(state)
-                val boundsInScene = enemyTable.localToScene(enemyTable.getBoundsInLocal())
+                val boundsInScene = enemyTable.localToScene(enemyTable.boundsInLocal)
                 val markerVis = Circle(boundsInScene.minX + boundsInScene.width / 2, boundsInScene.minY + boundsInScene.height / 2, ACTION_MARKER_RADIUS)
                 actionMarker = Pair<Action, Circle>(cardAction, markerVis)
 
@@ -235,7 +235,7 @@ class GameWindow: Application() {
                         otherVis = it
                     }
                 }
-                val boundsInScene = otherVis.localToScene(otherVis.getBoundsInLocal())
+                val boundsInScene = otherVis.localToScene(otherVis.boundsInLocal)
                 val markerVis = Circle(boundsInScene.minX + boundsInScene.width / 2, boundsInScene.minY + boundsInScene.height / 2, ACTION_MARKER_RADIUS)
                 actionMarker = Pair<Action, Circle>(cardAction, markerVis)
 
@@ -252,6 +252,22 @@ class GameWindow: Application() {
                     if ((card.cardModel as AdherentCard).currentHealthPoints <= 0) {
                         getActiveTableVis(state).children.remove(card)
                     }
+
+                    windowHandle.onActionPlayed()
+                }
+            }
+            is FightEnemyHero -> {
+                val enemyPlayerVis: PlayerVis = getEnemyPlayerVis(state)
+
+                val boundsInScene = enemyPlayerVis.localToScene(enemyPlayerVis.boundsInLocal)
+                val markerVis = Circle(boundsInScene.minX + boundsInScene.width / 2, boundsInScene.minY + boundsInScene.height / 2, ACTION_MARKER_RADIUS)
+                actionMarker = Pair<Action, Circle>(cardAction, markerVis)
+
+                markerVis.onMouseClicked = EventHandler<MouseEvent> {
+                    cardAction.resolve(state)
+
+                    enemyPlayerVis.update()
+                    card.update()
 
                     windowHandle.onActionPlayed()
                 }
@@ -345,6 +361,14 @@ class GameWindow: Application() {
     private fun markActivePlayer(state: GameState) {
         player1Vis.setActive(state.activePlayer == state.player1)
         player2Vis.setActive(state.activePlayer == state.player2)
+    }
+
+    private fun getActivePlayerVis(state: GameState): PlayerVis {
+        return if (state.activePlayer == state.player1) player1Vis else player2Vis
+    }
+
+    private fun getEnemyPlayerVis(state: GameState): PlayerVis {
+        return if (state.activePlayer != state.player1) player1Vis else player2Vis
     }
 
     private fun getActiveHandVis(state: GameState): HBox {
