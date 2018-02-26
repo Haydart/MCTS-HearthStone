@@ -11,6 +11,11 @@ import view.GameWindow
 
 var gGameInstance: Game? = null
 
+enum class GameMode {
+    TEXT,
+    GUI
+}
+
 fun main(args: Array<String>) {
 
     val player1 = Player(
@@ -33,9 +38,17 @@ fun main(args: Array<String>) {
 
     val gameInstance = Game(GameState(player1, player2, turnNumber = 0, activePlayer = player1))
     gGameInstance = gameInstance
-    val gameWindow = GameWindow()
-    gameWindow.launchWindow(args)
-    gameInstance.run()
+
+    val gameMode = GameMode.GUI
+    when (gameMode) {
+        GameMode.TEXT -> {
+            gameInstance.run()
+        }
+        GameMode.GUI -> {
+            val gameWindow = GameWindow()
+            gameWindow.launchWindow(args)
+        }
+    }
 }
 
 fun createInitialDeck(): MutableList<Card> = mutableListOf<Card>().apply {
