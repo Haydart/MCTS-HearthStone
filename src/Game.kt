@@ -1,13 +1,47 @@
-import actions.CardAction
+import actions.EndTurn
+import gametree.GameTree
+import gametree.Node
 import models.AdherentCard
 import models.Player
 import models.SpellCard
 import models.takeRandomElement
 import java.util.*
 
+const val TURN_TIME_MILLIS = 5000L
+
 class Game(var gameState: GameState) {
 
-//    val gameStatesStack = mutableListOf<GameState>()
+    private val initialRootNode = Node(
+            gameState,
+            generatePossibleEndTurnGameStates(),
+            null
+    )
+
+    private fun generatePossibleEndTurnGameStates(parentNode: Node? = null): MutableList<Node> {
+        val endStatesList = LinkedList<GameState>()
+        generateTurnTransitionalStates(endStatesList, gameState)
+        return endStatesList.map {
+            Node(it, LinkedList(), parentNode)
+        }.toMutableList()
+    }
+
+    private fun generateTurnTransitionalStates(leafStatesList: MutableList<GameState>, currentGameState: GameState) {
+        with(currentGameState) {
+            activePlayer.getAvailableActions(getOpponent(activePlayer)).forEach {
+                if (it is EndTurn) {
+                    it.resolve(currentGameState)
+                    leafStatesList.add(currentGameState.deepCopy())
+                    it.rollback(currentGameState)
+                } else {
+                    it.resolve(currentGameState)
+                    generateTurnTransitionalStates(leafStatesList, currentGameState)
+                    it.rollback(currentGameState)
+                }
+            }
+        }
+    }
+
+    private val gameTree = GameTree(initialRootNode)
 
     init {
         (0 until 3).forEach { gameState.player1.takeCardFromDeck() }
@@ -31,30 +65,47 @@ class Game(var gameState: GameState) {
     private fun gameEndConditionsMet() = gameState.player1.healthPoints <= 0 || gameState.player2.healthPoints <= 0
 
     private fun performTurn(currentPlayer: Player, enemyPlayer: Player) {
-        gameState.activePlayer.mana = (gameState.turnNumber - 1) / 2 + 1
-        drawCardOrGetPunished(currentPlayer)
-        println(gameState.activePlayer)
-        if (gameEndConditionsMet()) return
+//        drawCardOrGetPunished(currentPlayer)
+//        println(gameState.activePlayer)
+//        if (gameEndConditionsMet()) return
+//
+//        val availableActions = currentPlayer.getAvailableActions(enemyPlayer)
+//        println("My available actions $availableActions")
+//
+//        if (!availableActions.isEmpty()) {
+//            val randomAvailableAction = availableActions[Random().nextInt(availableActions.size)]
+//
+//            if (randomAvailableAction is CardAction) {
+//                println("I'm about to play: ${randomAvailableAction.triggeringCard}")
+//            } else {
+//                println("I chose to end my turn")
+//            }
+//
+//            randomAvailableAction.resolve(gameState)
+//        }
+//
+//        println("I have now ${currentPlayer.handCards.size} cards in hand.")
+//
+//        println("I have ${gameState.activePlayer.healthPoints} HP")
+//        println("------ Turn ended ------")
 
-        val availableActions = currentPlayer.getAvailableActions(enemyPlayer)
-        println("My available actions $availableActions")
+        mctsSearch()
+    }
 
-        if (!availableActions.isEmpty()) {
-            val randomAvailableAction = availableActions[Random().nextInt(availableActions.size)]
+    private fun mctsSearch() {
+        val currentNode = gameTree.rootNode
+        val startTime = System.currentTimeMillis()
 
-            if (randomAvailableAction is CardAction) {
-                println("I'm about to play: ${randomAvailableAction.triggeringCard}")
-            } else {
-                println("I chose to end my turn")
-            }
 
-            randomAvailableAction.resolve(gameState)
+        while (System.currentTimeMillis() < startTime + TURN_TIME_MILLIS) {
+
+            findBestChild(currentNode)
+
         }
+    }
 
-        println("I have now ${currentPlayer.handCards.size} cards in hand.")
+    private fun findBestChild(currentNode: Node) {
 
-        println("I have ${gameState.activePlayer.healthPoints} HP")
-        println("------ Turn ended ------")
     }
 
     fun drawCardOrGetPunished(currentPlayer: Player) {

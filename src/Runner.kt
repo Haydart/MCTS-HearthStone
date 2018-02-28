@@ -2,7 +2,10 @@ import actions.CardAction
 import actions.HealAll
 import actions.HitAllEnemies
 import actions.HitOne
-import models.*
+import models.AdherentCard
+import models.Card
+import models.Player
+import models.SpellCard
 import view.GameWindow
 
 /**
@@ -23,7 +26,6 @@ fun main(args: Array<String>) {
             createInitialDeck(),
             mutableListOf(),
             healthPoints = 20,
-            mana = 0,
             name = "Player1"
     )
 
@@ -32,7 +34,6 @@ fun main(args: Array<String>) {
             createInitialDeck(),
             mutableListOf(),
             healthPoints = 20,
-            mana = 0,
             name = "Player2"
     )
 
@@ -82,7 +83,7 @@ val circleOfHealingEffect: (Card, Player, Player) -> List<CardAction> = { trigge
 val flameLanceEffect: (Card, Player, Player) -> List<CardAction> = { triggeringCard, _, enemyPlayer ->
     val actionList = mutableListOf<CardAction>()
     enemyPlayer.tableCards.forEach {
-        actionList.add(HitOne(triggeringCard, it, 4))
+        actionList.add(HitOne(triggeringCard, it, damage = 4))
     }
     actionList
 }
