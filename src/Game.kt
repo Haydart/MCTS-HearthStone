@@ -1,25 +1,58 @@
 import actions.EndTurn
 import gametree.GameTree
 import gametree.Node
-import models.AdherentCard
-import models.Player
-import models.SpellCard
-import models.takeRandomElement
+import models.*
 import java.util.*
 
 const val TURN_TIME_MILLIS = 5000L
+const val PUNISH_VALUE = 2
 
 class Game(var gameState: GameState) {
 
     private val initialRootNode = Node(
             gameState,
-            generatePossibleEndTurnGameStates(),
+            generateCardDrawPossibleStates(),
             null
     )
 
-    private fun generatePossibleEndTurnGameStates(parentNode: Node? = null): MutableList<Node> {
+    private fun generateCardDrawPossibleStates(parentNode: Node? = null): List<Node> {
+        val possibleEndStateNodes = mutableListOf<Node>()
+        val cardToDrawProbability = mutableMapOf<Card, Float>()
+
+        gameState.activePlayer.deckCards.forEach {
+            val cardDrawProbability = gameState.activePlayer.deckCards.count { iterCard ->
+                iterCard.name == it.name
+            } / gameState.activePlayer.deckCards.size.toFloat()
+            cardToDrawProbability[it] = cardDrawProbability
+        }
+
+        cardToDrawProbability.forEach { card, probability ->
+            val gameStateAfterDraw = gameState.deepCopy()
+            gameStateAfterDraw.activePlayer.takeCardFromDeck(card)
+
+            val drawNode = Node(gameStateAfterDraw, listOf(), parentNode)
+            val drawNodeChildren = generatePossibleEndTurnGameStates(drawNode, gameStateAfterDraw)
+            drawNode.childNodes = drawNodeChildren
+
+            possibleEndStateNodes.add(drawNode)
+        }
+
+        if (cardToDrawProbability.isEmpty()) {
+
+            val punishmentNode = Node(gameState.deepCopy(), listOf(), parentNode)
+            punishPlayerWithEmptyDeck(punishmentNode.gameState.activePlayer)
+            val punishmentNodeChildren = generatePossibleEndTurnGameStates(punishmentNode, punishmentNode.gameState)
+            punishmentNode.childNodes = punishmentNodeChildren
+            possibleEndStateNodes.add(punishmentNode)
+        }
+
+        return possibleEndStateNodes
+    }
+
+
+    private fun generatePossibleEndTurnGameStates(parentNode: Node? = null, state: GameState): MutableList<Node> {
         val endStatesList = LinkedList<GameState>()
-        generateTurnTransitionalStates(endStatesList, gameState)
+        generateTurnTransitionalStates(endStatesList, state)
         return endStatesList.map {
             Node(it, LinkedList(), parentNode)
         }.toMutableList()
@@ -112,13 +145,18 @@ class Game(var gameState: GameState) {
         if (currentPlayer.deckCards.size > 0) {
             currentPlayer.takeCardFromDeck()
         } else {
-            currentPlayer.turnsWithDeckCardsDepleted++
             punishPlayerWithEmptyDeck(currentPlayer)
         }
     }
 
     private fun punishPlayerWithEmptyDeck(player: Player) {
-        player.healthPoints -= player.turnsWithDeckCardsDepleted * 2
+        player.turnsWithDeckCardsDepleted++
+        player.healthPoints -= player.turnsWithDeckCardsDepleted * PUNISH_VALUE
+    }
+
+    private fun revertPlayerPunish(player: Player) {
+        player.healthPoints += player.turnsWithDeckCardsDepleted * PUNISH_VALUE
+        player.turnsWithDeckCardsDepleted--
     }
 
     private fun Player.useRandomCard() {

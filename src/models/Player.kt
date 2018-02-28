@@ -49,6 +49,17 @@ data class Player(
 
     fun takeCardFromDeck() = handCards.add(deckCards.takeRandomElement())
 
+    fun takeCardFromDeck(card: Card): Int {
+        val cardIndex = deckCards.indexOf(card)
+        handCards.add(deckCards.removeAt(cardIndex))
+        return cardIndex
+    }
+
+    fun returnCardToDeck(card: Card, index: Int) {
+        handCards.remove(card)
+        deckCards.add(index, card)
+    }
+
     fun deepCopy(): Player {
         val handCardsCopy = mutableListOf<Card>().apply {
             this@Player.handCards.forEach { card ->

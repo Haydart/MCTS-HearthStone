@@ -11,7 +11,7 @@ class GameTree(initialRootNode: Node) {
 
 class Node(
         val gameState: GameState,
-        val childNodes: List<Node>,
+        var childNodes: List<Node>,
         val parentNode: Node? = null,
         val gamesPlayed: Int = 0,
         val gamesWon: Int = 0
