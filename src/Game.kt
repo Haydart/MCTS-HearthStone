@@ -1,4 +1,5 @@
 import actions.EndTurn
+import gametree.CardDrawingNode
 import gametree.GameTree
 import gametree.Node
 import models.*
@@ -11,9 +12,19 @@ class Game(var gameState: GameState) {
 
     private val initialRootNode = Node(
             gameState,
-            generateCardDrawPossibleStates(),
+            listOf(),
             null
     )
+
+    private val gameTree = GameTree(initialRootNode)
+
+    init {
+        (0 until 3).forEach { gameState.player1.takeCardFromDeck() }
+        (0 until 4).forEach { gameState.player2.takeCardFromDeck() }
+
+        initialRootNode.childNodes = generateCardDrawPossibleStates(initialRootNode)
+    }
+
 
     private fun generateCardDrawPossibleStates(parentNode: Node? = null): List<Node> {
         val possibleEndStateNodes = mutableListOf<Node>()
@@ -27,24 +38,25 @@ class Game(var gameState: GameState) {
         }
 
         cardToDrawProbability.forEach { card, probability ->
+            val ind = gameState.activePlayer.takeCardFromDeck(card)
             val gameStateAfterDraw = gameState.deepCopy()
-            gameStateAfterDraw.activePlayer.takeCardFromDeck(card)
+            gameState.activePlayer.returnCardToDeck(card, ind)
+            val drawNode = CardDrawingNode(probability, gameStateAfterDraw, listOf(), parentNode)
+            //val drawNodeChildren = generatePossibleEndTurnGameStates(drawNode, gameStateAfterDraw)
+            //drawNode.childNodes = drawNodeChildren
 
-            val drawNode = Node(gameStateAfterDraw, listOf(), parentNode)
-            val drawNodeChildren = generatePossibleEndTurnGameStates(drawNode, gameStateAfterDraw)
-            drawNode.childNodes = drawNodeChildren
-
+            println("card draw prob: $probability")
             possibleEndStateNodes.add(drawNode)
         }
 
-        if (cardToDrawProbability.isEmpty()) {
-
-            val punishmentNode = Node(gameState.deepCopy(), listOf(), parentNode)
-            punishPlayerWithEmptyDeck(punishmentNode.gameState.activePlayer)
-            val punishmentNodeChildren = generatePossibleEndTurnGameStates(punishmentNode, punishmentNode.gameState)
-            punishmentNode.childNodes = punishmentNodeChildren
-            possibleEndStateNodes.add(punishmentNode)
-        }
+//        if (cardToDrawProbability.isEmpty()) {
+//
+//            val punishmentNode = CardDrawingNode(1f, gameState.deepCopy(), listOf(), parentNode)
+//            punishPlayerWithEmptyDeck(punishmentNode.gameState.activePlayer)
+//            val punishmentNodeChildren = generatePossibleEndTurnGameStates(punishmentNode, punishmentNode.gameState)
+//            punishmentNode.childNodes = punishmentNodeChildren
+//            possibleEndStateNodes.add(punishmentNode)
+//        }
 
         return possibleEndStateNodes
     }
@@ -74,25 +86,20 @@ class Game(var gameState: GameState) {
         }
     }
 
-    private val gameTree = GameTree(initialRootNode)
-
-    init {
-        (0 until 3).forEach { gameState.player1.takeCardFromDeck() }
-        (0 until 4).forEach { gameState.player2.takeCardFromDeck() }
-    }
-
     fun run() {
-        with(gameState) {
+        println(gameTree.rootNode)
 
-            while (!gameEndConditionsMet()) {
-                gameState.turnNumber++
-                performTurn(activePlayer, getOpponent(activePlayer))
-                activePlayer = getOpponent(activePlayer)
-            }
-
-            val winningPlayer = if (player1.healthPoints < player2.healthPoints) player2 else player1
-            println("Game end, the winning player is ${if (winningPlayer == player1) "player1" else "player2"}")
-        }
+//        with(gameState) {
+//
+//            while (!gameEndConditionsMet()) {
+//                gameState.turnNumber++
+//                performTurn(activePlayer, getOpponent(activePlayer))
+//                activePlayer = getOpponent(activePlayer)
+//            }
+//
+//            val winningPlayer = if (player1.healthPoints < player2.healthPoints) player2 else player1
+//            println("Game end, the winning player is ${if (winningPlayer == player1) "player1" else "player2"}")
+//        }
     }
 
     private fun gameEndConditionsMet() = gameState.player1.healthPoints <= 0 || gameState.player2.healthPoints <= 0

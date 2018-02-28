@@ -80,9 +80,9 @@ data class Player(
         }
 
         return Player(
-                handCards,
-                deckCards,
-                tableCards,
+                handCardsCopy,
+                deckCardsCopy,
+                tableCardsCopy,
                 healthPoints,
                 mana,
                 name
