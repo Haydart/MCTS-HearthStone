@@ -2,13 +2,13 @@ package models
 
 import actions.CardAction
 
-class SpellCard(
-        name: String,
-        manaCost: Int,
-        getActionsFun: (Card, Player, Player) -> List<CardAction>
-) : Card(name, manaCost, getActionsFun) {
+data class SpellCard(
+        private val cardName: String,
+        private val cardManaCost: Int,
+        private val cardGetActionsFun: (Card, Player, Player) -> List<CardAction>
+) : Card(cardName, cardManaCost, cardGetActionsFun) {
 
-    fun getActions(currentPlayer: Player, enemyPlayer: Player) = getActionsFun(this, currentPlayer, enemyPlayer)
+    override fun deepCopy() = copy()
 
     override fun toString() = "name($name), manaCost($manaCost)"
 }
