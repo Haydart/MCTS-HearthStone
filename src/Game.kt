@@ -42,8 +42,8 @@ class Game(var gameState: GameState) {
             val gameStateAfterDraw = gameState.deepCopy()
             gameState.activePlayer.returnCardToDeck(card, ind)
             val drawNode = CardDrawingNode(probability, gameStateAfterDraw, listOf(), parentNode)
-            //val drawNodeChildren = generatePossibleEndTurnGameStates(drawNode, gameStateAfterDraw)
-            //drawNode.childNodes = drawNodeChildren
+            val drawNodeChildren = generatePossibleEndTurnGameStates(drawNode, gameStateAfterDraw)
+            drawNode.childNodes = drawNodeChildren
 
             println("card draw prob: $probability")
             possibleEndStateNodes.add(drawNode)
