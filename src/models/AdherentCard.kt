@@ -21,15 +21,17 @@ val defaultAdherentActionsFun: (Card, Player, Player) -> List<CardAction> = { tr
     availableActions
 }
 
-class AdherentCard(
+data class AdherentCard(
         val maxHealthPoints: Int,
         var attackStrength: Int,
         var hasBeenUsedInCurrentTurn: Boolean = false,
-        name: String,
-        manaCost: Int
-) : Card(name, manaCost, defaultAdherentActionsFun) {
+        private val cardName: String,
+        private val cardManaCost: Int
+) : Card(cardName, cardManaCost, defaultAdherentActionsFun) {
 
     var currentHealthPoints: Int = maxHealthPoints
+
+    override fun deepCopy() = copy()
 
     override fun toString() = "name($name), manaCost($manaCost), wasUsedInThisTurn($hasBeenUsedInCurrentTurn)"
 }

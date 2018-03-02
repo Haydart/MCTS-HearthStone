@@ -21,19 +21,33 @@ abstract class CardAction : Action() {
 
 class EndTurn : Action() {
 
-    val usedCardsList = mutableListOf<AdherentCard>()
+    private val usedCardsList = mutableListOf<AdherentCard>()
+    private var manaPointsAtTurnsEnd: Int = 0
 
     override fun resolve(gameState: GameState) {
-        gameState.activePlayer.tableCards.forEach {
-            if (it.hasBeenUsedInCurrentTurn) {
-                usedCardsList.add(it)
-                it.hasBeenUsedInCurrentTurn = false
+        with(gameState) {
+            activePlayer.tableCards.forEach {
+                if (it.hasBeenUsedInCurrentTurn) {
+                    usedCardsList.add(it)
+                    it.hasBeenUsedInCurrentTurn = false
+                }
             }
+
+            manaPointsAtTurnsEnd = activePlayer.mana
+            gameState.turnNumber++
+            activePlayer.mana = (gameState.turnNumber - 1) / 2 + 1
+            activePlayer = getOpponent(activePlayer)
         }
     }
 
     override fun rollback(gameState: GameState) {
-        usedCardsList.forEach { it.hasBeenUsedInCurrentTurn = true }
+        with(gameState) {
+            usedCardsList.forEach { it.hasBeenUsedInCurrentTurn = true }
+
+            activePlayer = getOpponent(activePlayer)
+            activePlayer.mana = manaPointsAtTurnsEnd
+            gameState.turnNumber--
+        }
     }
 }
 
