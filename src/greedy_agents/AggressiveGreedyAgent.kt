@@ -17,10 +17,8 @@ private const val ADHERENT_HP_SUM_WEIGHT = 1
 class AggressiveGreedyAgent : GreedyAgent() {
 
     override fun performTurn(gameStateAfterCardDrawing: GameState) {
-        println(gameStateAfterCardDrawing.activePlayer.name)
         val gameStateToActionsListMap = mutableMapOf<GameState, List<Action>>()
         generateTurnTransitionalStates(gameStateAfterCardDrawing, mutableListOf(), gameStateToActionsListMap)
-        println(gameStateAfterCardDrawing.activePlayer.name)
         var bestEvaluationSoFar = Float.MIN_VALUE
         lateinit var gameStateToActionsListPair: Pair<GameState, List<Action>>
 
@@ -41,10 +39,9 @@ class AggressiveGreedyAgent : GreedyAgent() {
         //todo make the moves
     }
 
-    override fun evaluateGameState(gameState: GameState): Float {
+    fun evaluateGameState(gameState: GameState): Float {
         return with(gameState) {
             val enemyPlayer = getOpponent(activePlayer)
-            println(activePlayer.name)
             activePlayer.healthPoints * OWN_HP_WEIGHT + enemyPlayer.healthPoints * ENEMY_HP_WEIGHT +
                     (activePlayer.tableCards.size - enemyPlayer.tableCards.size) * ADHERENT_COUNT_WEIGHT +
                     (activePlayer.tableCards.sumBy { it.attackStrength } - enemyPlayer.tableCards.sumBy { it.attackStrength }) * ATTACK_SUM_WEIGHT +

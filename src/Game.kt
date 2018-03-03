@@ -3,11 +3,13 @@ import gametree.CardDrawingNode
 import gametree.GameTree
 import gametree.Node
 import greedy_agents.AggressiveGreedyAgent
-import models.*
+import greedy_agents.RandomGreedyAgent
+import models.Card
+import models.Player
 import java.util.*
 
 const val TURN_TIME_MILLIS = 5000L
-const val PUNISH_VALUE = 2
+const val PUNISHMENT_VALUE = 2
 
 class Game(var gameState: GameState) {
 
@@ -19,6 +21,7 @@ class Game(var gameState: GameState) {
 
     private val gameTree = GameTree(initialRootNode)
 
+    private val randomAgent = RandomGreedyAgent()
     private val greedyAgent = AggressiveGreedyAgent()
 
     init {
@@ -43,11 +46,11 @@ class Game(var gameState: GameState) {
             val index = gameState.activePlayer.takeCardFromDeck(card)
             val gameStateAfterDraw = gameState.deepCopy()
             gameState.activePlayer.returnCardToDeck(card, index)
+
             val drawNode = CardDrawingNode(probability, gameStateAfterDraw, listOf(), parentNode)
             val drawNodeChildren = generatePossibleEndTurnGameStates(drawNode, gameStateAfterDraw)
             drawNode.childNodes = drawNodeChildren
 
-//            println("card draw prob: $probability")
             possibleEndStateNodes.add(drawNode)
         }
 
@@ -92,49 +95,26 @@ class Game(var gameState: GameState) {
 
         with(gameState) {
 
-//            while (!gameEndConditionsMet()) {
-            activePlayer = player2
-            performTurn(activePlayer, getOpponent(activePlayer))
-//            }
+            while (!gameEndConditionsMet()) {
+                performTurn(activePlayer, getOpponent(activePlayer))
+                activePlayer = getOpponent(activePlayer)
+            }
 
             val winningPlayer = if (player1.healthPoints < player2.healthPoints) player2 else player1
-            println("Game end, the winning player is ${if (winningPlayer == player1) "player1" else "player2"}")
+            println("Game end, the winning player is \n$winningPlayer")
         }
     }
 
     private fun gameEndConditionsMet() = gameState.player1.healthPoints <= 0 || gameState.player2.healthPoints <= 0
 
     private fun performTurn(currentPlayer: Player, enemyPlayer: Player) {
-        println(gameState.activePlayer)
-
-//        val availableActions = currentPlayer.getAvailableActions(enemyPlayer)
-//        println("My available actions $availableActions")
-
-//        if (!availableActions.isEmpty()) {
-//            val randomAvailableAction = availableActions[Random().nextInt(availableActions.size)]
-//
-//            if (randomAvailableAction is CardAction) {
-//                println("I'm about to play: ${randomAvailableAction.triggeringCard}")
-//            } else {
-//                println("I chose to end my turn")
-//            }
-//
-//            randomAvailableAction.resolve(gameState)
-//        }
-
-//        println("I have now ${currentPlayer.handCards.size} cards in hand.")
-//
-//        println("I have ${gameState.activePlayer.healthPoints} HP")
-//        println("------ Turn ended ------")
-
-
         drawCardOrGetPunished(currentPlayer)
 
-        if (currentPlayer == gameState.player2) { //bot
+
+
+        if (currentPlayer == gameState.player2) {
             greedyAgent.performTurn(gameState)
         }
-
-        //mctsSearch()
     }
 
     private fun mctsSearch() {
@@ -163,22 +143,12 @@ class Game(var gameState: GameState) {
 
     private fun punishPlayerWithEmptyDeck(player: Player) {
         player.turnsWithDeckCardsDepleted++
-        player.healthPoints -= player.turnsWithDeckCardsDepleted * PUNISH_VALUE
+        player.healthPoints -= player.turnsWithDeckCardsDepleted * PUNISHMENT_VALUE
     }
 
     private fun revertPlayerPunish(player: Player) {
-        player.healthPoints += player.turnsWithDeckCardsDepleted * PUNISH_VALUE
+        player.healthPoints += player.turnsWithDeckCardsDepleted * PUNISHMENT_VALUE
         player.turnsWithDeckCardsDepleted--
-    }
-
-    private fun Player.useRandomCard() {
-        val drawnCard = handCards.takeRandomElement()
-
-        if (drawnCard is AdherentCard) {
-            tableCards.add(drawnCard)
-        } else if (drawnCard is SpellCard) {
-//            drawnCard.applyEffect(activePlayer, getOpponent(activePlayer))
-        } else throw IllegalStateException("The drawn card is neither Adherent nor Spell.")
     }
 }
 

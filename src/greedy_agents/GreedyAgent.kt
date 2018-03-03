@@ -9,9 +9,8 @@ import pop
  * Created by r.makowiecki on 03/03/2018.
  */
 abstract class GreedyAgent {
-    abstract fun performTurn(gameStateAfterCardDrawing: GameState)
 
-    abstract fun evaluateGameState(gameState: GameState): Float
+    abstract fun performTurn(gameStateAfterCardDrawing: GameState)
 
     protected fun generateTurnTransitionalStates(currentGameState: GameState, actionsSoFar: MutableList<Action>, actionsPerEndState: MutableMap<GameState, List<Action>>) {
 
@@ -37,7 +36,6 @@ abstract class GreedyAgent {
 
                 actionsSoFar.pop()
             }
-
         }
     }
 }

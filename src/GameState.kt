@@ -12,4 +12,6 @@ data class GameState(val player1: Player, val player2: Player, var activePlayer:
 
         return GameState(player1Copy, player2Copy, activePlayerCopy, turnNumber)
     }
+
+    override fun toString() = "$player1\n$player2\nactive player = ${activePlayer.name}"
 }

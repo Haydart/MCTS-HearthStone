@@ -7,9 +7,9 @@ import GameState
  */
 class ControllingGreedyAgent : GreedyAgent() {
 
-    override fun evaluateGameState(gameState: GameState): Float = Float.MIN_VALUE
-
     override fun performTurn(gameStateAfterCardDrawing: GameState) {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
+
+    fun evaluateGameState(gameState: GameState): Float = Float.MIN_VALUE
 }
