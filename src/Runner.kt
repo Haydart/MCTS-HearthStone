@@ -26,7 +26,7 @@ fun main(args: Array<String>) {
             createInitialDeck(),
             mutableListOf(),
             healthPoints = 20,
-            name = "Player1",
+            name = "Random agent",
             turnsWithDeckCardsDepleted = 0,
             discardedCount = 0
     )
@@ -36,7 +36,7 @@ fun main(args: Array<String>) {
             createInitialDeck(),
             mutableListOf(),
             healthPoints = 20,
-            name = "Player2",
+            name = "Aggressive agent",
             turnsWithDeckCardsDepleted = 0,
             discardedCount = 0
     )
