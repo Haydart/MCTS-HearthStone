@@ -54,17 +54,19 @@ class EndTurn : Action() {
 abstract class AdherentCardAction : CardAction()
 
 abstract class SpellCardAction : CardAction() {
+    var spellRemovedAtIndex = -1
 
     override fun resolve(gameState: GameState) {
         gameState.activePlayer.mana -= triggeringCard.manaCost
+        spellRemovedAtIndex = gameState.activePlayer.handCards.indexOf(triggeringCard)
         gameState.activePlayer.handCards.remove(triggeringCard)
         gameState.activePlayer.discardedCount++
     }
 
     override fun rollback(gameState: GameState) {
-        gameState.activePlayer.mana += triggeringCard.manaCost
-        gameState.activePlayer.handCards.add(triggeringCard)
         gameState.activePlayer.discardedCount--
+        gameState.activePlayer.handCards.add(spellRemovedAtIndex, triggeringCard)
+        gameState.activePlayer.mana += triggeringCard.manaCost
     }
 }
 
@@ -166,13 +168,13 @@ class HitOne(override val triggeringCard: Card, val targetCard: AdherentCard, va
     }
 
     override fun rollback(gameState: GameState) {
-        super.rollback(gameState)
         with(gameState) {
             if (removedAtIndex != -1) {
                 getOpponent(activePlayer).tableCards.add(removedAtIndex, killedAdherent)
             }
             targetCard.currentHealthPoints += damage
         }
+        super.rollback(gameState)
     }
 }
 
@@ -197,7 +199,6 @@ class HitAllEnemies(override val triggeringCard: Card, val damage: Int) : SpellC
     }
 
     override fun rollback(gameState: GameState) {
-        super.rollback(gameState)
         with(gameState) {
             killedAdherents.forEachIndexed { loopIndex, adherentCard ->
                 getOpponent(activePlayer).tableCards.add(removedIndices[loopIndex], adherentCard)
@@ -206,6 +207,7 @@ class HitAllEnemies(override val triggeringCard: Card, val damage: Int) : SpellC
                 it.currentHealthPoints += damage
             }
         }
+        super.rollback(gameState)
     }
 }
 

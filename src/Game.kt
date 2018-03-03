@@ -25,7 +25,6 @@ class Game(var gameState: GameState) {
         initialRootNode.childNodes = generateCardDrawPossibleStates(initialRootNode)
     }
 
-
     private fun generateCardDrawPossibleStates(parentNode: Node? = null): List<Node> {
         val possibleEndStateNodes = mutableListOf<Node>()
         val cardToDrawProbability = mutableMapOf<Card, Float>()
@@ -38,9 +37,9 @@ class Game(var gameState: GameState) {
         }
 
         cardToDrawProbability.forEach { card, probability ->
-            val ind = gameState.activePlayer.takeCardFromDeck(card)
+            val index = gameState.activePlayer.takeCardFromDeck(card)
             val gameStateAfterDraw = gameState.deepCopy()
-            gameState.activePlayer.returnCardToDeck(card, ind)
+            gameState.activePlayer.returnCardToDeck(card, index)
             val drawNode = CardDrawingNode(probability, gameStateAfterDraw, listOf(), parentNode)
             val drawNodeChildren = generatePossibleEndTurnGameStates(drawNode, gameStateAfterDraw)
             drawNode.childNodes = drawNodeChildren
@@ -61,8 +60,7 @@ class Game(var gameState: GameState) {
         return possibleEndStateNodes
     }
 
-
-    private fun generatePossibleEndTurnGameStates(parentNode: Node? = null, state: GameState): MutableList<Node> {
+    private fun generatePossibleEndTurnGameStates(parentNode: Node, state: GameState): MutableList<Node> {
         val endStatesList = LinkedList<GameState>()
         generateTurnTransitionalStates(endStatesList, state)
         return endStatesList.map {
