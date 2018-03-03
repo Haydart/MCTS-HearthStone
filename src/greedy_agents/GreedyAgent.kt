@@ -12,7 +12,11 @@ abstract class GreedyAgent {
 
     abstract fun performTurn(globalGameStateAfterCardDrawing: GameState)
 
-    protected fun generateTurnTransitionalStates(currentGameState: GameState, actionsSoFar: MutableList<Action>, actionsPerEndState: MutableMap<GameState, List<Action>>) {
+    protected fun generateTurnTransitionalStates(
+            currentGameState: GameState,
+            actionsPerEndState: MutableMap<GameState, List<Action>>,
+            actionsSoFar: MutableList<Action> = mutableListOf()
+    ) {
 
         with(currentGameState) {
 
@@ -30,7 +34,7 @@ abstract class GreedyAgent {
                     it.rollback(currentGameState)
                 } else {
                     it.resolve(currentGameState)
-                    generateTurnTransitionalStates(currentGameState, actionsSoFar, actionsPerEndState)
+                    generateTurnTransitionalStates(currentGameState, actionsPerEndState, actionsSoFar)
                     it.rollback(currentGameState)
                 }
 

@@ -1,18 +1,20 @@
 package view
 
-import gGameInstance
 import GameState
 import actions.*
+import gGameInstance
 import javafx.application.Application
-import javafx.scene.Scene
-import javafx.stage.Stage
-import javafx.event.EventHandler;
-import javafx.geometry.Pos
-import javafx.scene.control.Button
-import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.*
 import javafx.event.ActionEvent
+import javafx.event.EventHandler
+import javafx.geometry.Pos
+import javafx.scene.Scene
+import javafx.scene.control.Button
+import javafx.scene.input.MouseEvent
+import javafx.scene.layout.BorderPane
+import javafx.scene.layout.HBox
+import javafx.scene.layout.VBox
 import javafx.scene.shape.Circle
+import javafx.stage.Stage
 import models.AdherentCard
 import models.Card
 import models.Player
@@ -140,15 +142,15 @@ class GameWindow: Application() {
             // force EndTurn action
             val endAction = EndTurn()
             endAction.resolve(state)
-
-            // force change active player (possibly may take place in EndTurn action)
-            state.activePlayer = state.getOpponent(state.activePlayer)
-
-            // force increment game turn (possibly may take place in EndTurn action)
-            state.turnNumber++
-
-            // force active player mana update (possibly may take place in EndTurn action)
-            state.activePlayer.mana = (state.turnNumber - 1) / 2 + 1
+//
+//            // force change active player (possibly may take place in EndTurn action)
+//            state.activePlayer = state.getOpponent(state.activePlayer)
+//
+//            // force increment game turn (possibly may take place in EndTurn action)
+//            state.turnNumber++
+//
+//            // force active player mana update (possibly may take place in EndTurn action)
+//            state.activePlayer.mana = (state.turnNumber - 1) / 2 + 1
 
             //it might be handled in other way if we choose to force update everything instead of just selected board items
             val inHandBeforeDraw = state.activePlayer.handCards.size

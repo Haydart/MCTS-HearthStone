@@ -18,7 +18,7 @@ class AggressiveGreedyAgent : GreedyAgent() {
 
     override fun performTurn(globalGameStateAfterCardDrawing: GameState) {
         val gameStateActionsListMap = mutableMapOf<GameState, List<Action>>()
-        generateTurnTransitionalStates(globalGameStateAfterCardDrawing, mutableListOf(), gameStateActionsListMap)
+        generateTurnTransitionalStates(globalGameStateAfterCardDrawing, gameStateActionsListMap)
         var bestEvaluationSoFar = Float.MIN_VALUE
         lateinit var movesToPerform: Pair<GameState, List<Action>>
 

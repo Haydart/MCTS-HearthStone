@@ -92,11 +92,12 @@ class Game(var gameState: GameState) {
 
     fun run() {
         with(gameState) {
-
             while (!gameEndConditionsMet()) {
-                performTurn(activePlayer, getOpponent(activePlayer))
-                activePlayer = getOpponent(activePlayer)
+                performTurn(activePlayer)
             }
+
+            println("Game state after turn: ")
+            println(gameState)
 
             val winningPlayer = if (player1.healthPoints < player2.healthPoints) player2 else player1
             println("Game end, the winning player is \n$winningPlayer")
@@ -105,7 +106,7 @@ class Game(var gameState: GameState) {
 
     private fun gameEndConditionsMet() = gameState.player1.healthPoints <= 0 || gameState.player2.healthPoints <= 0
 
-    private fun performTurn(currentPlayer: Player, enemyPlayer: Player) {
+    private fun performTurn(currentPlayer: Player) {
         drawCardOrGetPunished(currentPlayer)
 
         if (currentPlayer == gameState.player1) {

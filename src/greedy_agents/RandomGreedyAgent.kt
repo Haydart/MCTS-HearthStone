@@ -12,7 +12,7 @@ class RandomGreedyAgent : GreedyAgent() {
 
     override fun performTurn(globalGameStateAfterCardDrawing: GameState) {
         val gameStateToActionsListMap = mutableMapOf<GameState, List<Action>>()
-        generateTurnTransitionalStates(globalGameStateAfterCardDrawing, mutableListOf(), gameStateToActionsListMap)
+        generateTurnTransitionalStates(globalGameStateAfterCardDrawing, gameStateToActionsListMap)
 
         val keyList = gameStateToActionsListMap.keys.toList()
         Collections.shuffle(keyList)
