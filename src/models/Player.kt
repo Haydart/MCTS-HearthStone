@@ -18,7 +18,7 @@ data class Player(
         val deckCards: MutableList<Card>,
         val tableCards: MutableList<AdherentCard>,
         var healthPoints: Int,
-        var mana: Int,
+        var mana: Int = 1,
         val name: String
 ) {
 
@@ -48,6 +48,46 @@ data class Player(
     private fun cardWasNotUsedInCurrentTurn(action: CardAction) = action.triggeringCard !is AdherentCard || !(action.triggeringCard as AdherentCard).hasBeenUsedInCurrentTurn
 
     fun takeCardFromDeck() = handCards.add(deckCards.takeRandomElement())
+
+    fun takeCardFromDeck(card: Card): Int {
+        val cardIndex = deckCards.indexOf(card)
+        handCards.add(deckCards.removeAt(cardIndex))
+        return cardIndex
+    }
+
+    fun returnCardToDeck(card: Card, index: Int) {
+        handCards.remove(card)
+        deckCards.add(index, card)
+    }
+
+    fun deepCopy(): Player {
+        val handCardsCopy = mutableListOf<Card>().apply {
+            this@Player.handCards.forEach { card ->
+                add(card.deepCopy())
+            }
+        }
+
+        val deckCardsCopy = mutableListOf<Card>().apply {
+            this@Player.deckCards.forEach { card ->
+                add(card.deepCopy())
+            }
+        }
+
+        val tableCardsCopy = mutableListOf<AdherentCard>().apply {
+            this@Player.tableCards.forEach { card ->
+                add(card.deepCopy())
+            }
+        }
+
+        return Player(
+                handCardsCopy,
+                deckCardsCopy,
+                tableCardsCopy,
+                healthPoints,
+                mana,
+                name
+        )
+    }
 
     override fun toString() = "$name deckCards(${deckCards.size}), handCards(${handCards.size}), tableCards(${tableCards.size}), " +
             "discardedCards($discardedCount), HP($healthPoints), mana($mana)"
