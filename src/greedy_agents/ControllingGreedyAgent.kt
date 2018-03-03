@@ -7,7 +7,7 @@ import GameState
  */
 class ControllingGreedyAgent : GreedyAgent() {
 
-    override fun performTurn(gameStateAfterCardDrawing: GameState) {
+    override fun performTurn(globalGameStateAfterCardDrawing: GameState) {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 

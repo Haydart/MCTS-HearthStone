@@ -10,7 +10,7 @@ import pop
  */
 abstract class GreedyAgent {
 
-    abstract fun performTurn(gameStateAfterCardDrawing: GameState)
+    abstract fun performTurn(globalGameStateAfterCardDrawing: GameState)
 
     protected fun generateTurnTransitionalStates(currentGameState: GameState, actionsSoFar: MutableList<Action>, actionsPerEndState: MutableMap<GameState, List<Action>>) {
 

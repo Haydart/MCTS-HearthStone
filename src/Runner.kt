@@ -71,7 +71,7 @@ fun createInitialDeck(): MutableList<Card> = mutableListOf<Card>().apply {
     }
 }
 
-val dragonBreathEffect: (Card, Player, Player) -> List<CardAction> = { triggeringCard, _, enemyPlayer ->
+val dragonBreathEffect: (Card, Player, Player) -> List<CardAction> = { triggeringCard, _, _ ->
     listOf(HitAllEnemies(triggeringCard, damage = 2))
 }
 

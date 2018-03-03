@@ -10,14 +10,16 @@ import java.util.*
  */
 class RandomGreedyAgent : GreedyAgent() {
 
-    override fun performTurn(gameStateAfterCardDrawing: GameState) {
+    override fun performTurn(globalGameStateAfterCardDrawing: GameState) {
         val gameStateToActionsListMap = mutableMapOf<GameState, List<Action>>()
-        generateTurnTransitionalStates(gameStateAfterCardDrawing, mutableListOf(), gameStateToActionsListMap)
+        generateTurnTransitionalStates(globalGameStateAfterCardDrawing, mutableListOf(), gameStateToActionsListMap)
 
         val keyList = gameStateToActionsListMap.keys.toList()
         Collections.shuffle(keyList)
-        val movesToPerform = gameStateToActionsListMap[keyList[0]]
+        val movesToPerform = gameStateToActionsListMap[keyList[0]]!!
 
         println("Moves to perform: $movesToPerform")
+
+        movesToPerform.forEach { it.resolve(globalGameStateAfterCardDrawing) }
     }
 }
