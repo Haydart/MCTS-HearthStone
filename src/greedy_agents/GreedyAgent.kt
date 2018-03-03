@@ -11,7 +11,7 @@ import pop
 abstract class GreedyAgent {
     abstract fun performTurn(gameStateAfterCardDrawing: GameState)
 
-    abstract fun evaluateGameState(gameState: GameState)
+    abstract fun evaluateGameState(gameState: GameState): Float
 
     protected fun generateTurnTransitionalStates(currentGameState: GameState, actionsSoFar: MutableList<Action>, actionsPerEndState: MutableMap<GameState, List<Action>>) {
 
@@ -27,7 +27,7 @@ abstract class GreedyAgent {
                     actionsSoFar.forEach {
                         actionsToEnd.add(it)
                     }
-                    actionsPerEndState.put(currentGameState.deepCopy(), actionsToEnd)
+                    actionsPerEndState.put(currentGameState.deepCopy().apply { activePlayer = getOpponent(activePlayer) }, actionsToEnd)
                     it.rollback(currentGameState)
                 } else {
                     it.resolve(currentGameState)

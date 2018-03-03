@@ -65,8 +65,8 @@ fun createInitialDeck(): MutableList<Card> = mutableListOf<Card>().apply {
         add(AdherentCard(maxHealthPoints = 7, attackStrength = 3, cardManaCost = 5, cardName = "Panther"))
         add(AdherentCard(maxHealthPoints = 5, attackStrength = 2, cardManaCost = 3, cardName = "Public Defender"))
         add(AdherentCard(maxHealthPoints = 2, attackStrength = 3, cardManaCost = 1, cardName = "Murloc"))
-        add(SpellCard(cardName = "Flame Lance", cardManaCost = 0, cardGetActionsFun = flameLanceEffect))
-        add(SpellCard(cardName = "Dragon's Breath", cardManaCost = 0, cardGetActionsFun = dragonBreathEffect))
+        add(SpellCard(cardName = "Flame Lance", cardManaCost = 4, cardGetActionsFun = flameLanceEffect))
+        add(SpellCard(cardName = "Dragon's Breath", cardManaCost = 5, cardGetActionsFun = dragonBreathEffect))
         add(SpellCard(cardName = "Circle of Healing", cardManaCost = 0, cardGetActionsFun = circleOfHealingEffect))
     }
 }

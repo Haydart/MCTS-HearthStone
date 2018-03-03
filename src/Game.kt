@@ -2,7 +2,7 @@ import actions.EndTurn
 import gametree.CardDrawingNode
 import gametree.GameTree
 import gametree.Node
-import greedy_agents.AggresiveGreedyAgent
+import greedy_agents.AggressiveGreedyAgent
 import models.*
 import java.util.*
 
@@ -19,7 +19,7 @@ class Game(var gameState: GameState) {
 
     private val gameTree = GameTree(initialRootNode)
 
-    private val greedyAgent = AggresiveGreedyAgent()
+    private val greedyAgent = AggressiveGreedyAgent()
 
     init {
         (0 until 3).forEach { gameState.player1.takeCardFromDeck() }
