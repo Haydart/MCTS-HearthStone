@@ -22,7 +22,7 @@ class Game(var gameState: GameState) {
     private val gameTree = GameTree(initialRootNode)
 
     private val randomAgent = RandomGreedyAgent()
-    private val greedyAgent = AggressiveGreedyAgent()
+    private val aggressiveAgent = AggressiveGreedyAgent()
 
     init {
         (0 until 3).forEach { gameState.player1.takeCardFromDeck() }
@@ -91,8 +91,6 @@ class Game(var gameState: GameState) {
     }
 
     fun run() {
-//        println(gameTree.rootNode)
-
         with(gameState) {
 
             while (!gameEndConditionsMet()) {
@@ -110,10 +108,10 @@ class Game(var gameState: GameState) {
     private fun performTurn(currentPlayer: Player, enemyPlayer: Player) {
         drawCardOrGetPunished(currentPlayer)
 
-
-
-        if (currentPlayer == gameState.player2) {
-            greedyAgent.performTurn(gameState)
+        if (currentPlayer == gameState.player1) {
+            randomAgent.performTurn(gameState)
+        } else {
+            aggressiveAgent.performTurn(gameState)
         }
     }
 
