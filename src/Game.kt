@@ -2,6 +2,7 @@ import actions.EndTurn
 import gametree.CardDrawingNode
 import gametree.GameTree
 import gametree.Node
+import greedy_agents.AggresiveGreedyAgent
 import models.*
 import java.util.*
 
@@ -17,6 +18,8 @@ class Game(var gameState: GameState) {
     )
 
     private val gameTree = GameTree(initialRootNode)
+
+    private val greedyAgent = AggresiveGreedyAgent()
 
     init {
         (0 until 3).forEach { gameState.player1.takeCardFromDeck() }
@@ -44,7 +47,7 @@ class Game(var gameState: GameState) {
             val drawNodeChildren = generatePossibleEndTurnGameStates(drawNode, gameStateAfterDraw)
             drawNode.childNodes = drawNodeChildren
 
-            println("card draw prob: $probability")
+//            println("card draw prob: $probability")
             possibleEndStateNodes.add(drawNode)
         }
 
@@ -60,7 +63,7 @@ class Game(var gameState: GameState) {
         return possibleEndStateNodes
     }
 
-    private fun generatePossibleEndTurnGameStates(parentNode: Node, state: GameState): MutableList<Node> {
+    private fun generatePossibleEndTurnGameStates(parentNode: Node? = null, state: GameState): MutableList<Node> {
         val endStatesList = LinkedList<GameState>()
         generateTurnTransitionalStates(endStatesList, state)
         return endStatesList.map {
@@ -85,31 +88,28 @@ class Game(var gameState: GameState) {
     }
 
     fun run() {
-        println(gameTree.rootNode)
+//        println(gameTree.rootNode)
 
-//        with(gameState) {
-//
+        with(gameState) {
+
 //            while (!gameEndConditionsMet()) {
-//                gameState.turnNumber++
-//                performTurn(activePlayer, getOpponent(activePlayer))
-//                activePlayer = getOpponent(activePlayer)
+            activePlayer = player2
+            performTurn(activePlayer, getOpponent(activePlayer))
 //            }
-//
-//            val winningPlayer = if (player1.healthPoints < player2.healthPoints) player2 else player1
-//            println("Game end, the winning player is ${if (winningPlayer == player1) "player1" else "player2"}")
-//        }
+
+            val winningPlayer = if (player1.healthPoints < player2.healthPoints) player2 else player1
+            println("Game end, the winning player is ${if (winningPlayer == player1) "player1" else "player2"}")
+        }
     }
 
     private fun gameEndConditionsMet() = gameState.player1.healthPoints <= 0 || gameState.player2.healthPoints <= 0
 
     private fun performTurn(currentPlayer: Player, enemyPlayer: Player) {
-//        drawCardOrGetPunished(currentPlayer)
-//        println(gameState.activePlayer)
-//        if (gameEndConditionsMet()) return
-//
+        println(gameState.activePlayer)
+
 //        val availableActions = currentPlayer.getAvailableActions(enemyPlayer)
 //        println("My available actions $availableActions")
-//
+
 //        if (!availableActions.isEmpty()) {
 //            val randomAvailableAction = availableActions[Random().nextInt(availableActions.size)]
 //
@@ -121,13 +121,20 @@ class Game(var gameState: GameState) {
 //
 //            randomAvailableAction.resolve(gameState)
 //        }
-//
+
 //        println("I have now ${currentPlayer.handCards.size} cards in hand.")
 //
 //        println("I have ${gameState.activePlayer.healthPoints} HP")
 //        println("------ Turn ended ------")
 
-        mctsSearch()
+
+        drawCardOrGetPunished(currentPlayer)
+
+        if (currentPlayer == gameState.player2) { //bot
+            greedyAgent.performTurn(gameState)
+        }
+
+        //mctsSearch()
     }
 
     private fun mctsSearch() {
