@@ -186,3 +186,21 @@ fun <E> MutableList<E>.pop(): E {
     remove(lastItem)
     return lastItem
 }
+
+fun <E> MutableList<E>.removeExact(element: E): Boolean {
+    return removeIf {
+        it === element
+    }
+}
+
+fun <E> MutableList<E>.indexOfExact(element: E): Int {
+    return indexOfFirst {
+        it === element
+    }
+}
+
+fun <E> MutableList<E>.containsExact(element: E): Boolean {
+    return any {
+        it === element
+    }
+}
