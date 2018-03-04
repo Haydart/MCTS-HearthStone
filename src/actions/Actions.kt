@@ -1,8 +1,10 @@
 package actions
 
 import GameState
+import indexOfExact
 import models.AdherentCard
 import models.Card
+import removeExact
 
 /**
  * Created by r.makowiecki on 24/02/2018.
@@ -59,7 +61,7 @@ abstract class SpellCardAction : CardAction() {
     override fun resolve(gameState: GameState) {
         gameState.activePlayer.mana -= triggeringCard.manaCost
         spellRemovedAtIndex = gameState.activePlayer.handCards.indexOf(triggeringCard)
-        gameState.activePlayer.handCards.remove(triggeringCard)
+        gameState.activePlayer.handCards.removeExact(triggeringCard)
         gameState.activePlayer.discardedCount++
     }
 
@@ -80,7 +82,7 @@ class PlaceAdherentCard(override val triggeringCard: AdherentCard) : AdherentCar
         with(gameState.activePlayer) {
             mana -= triggeringCard.manaCost
             tableCards.add(triggeringCard)
-            handCards.remove(triggeringCard)
+            handCards.removeExact(triggeringCard)
             triggeringCard.hasBeenUsedInCurrentTurn = true
         }
     }
@@ -88,7 +90,7 @@ class PlaceAdherentCard(override val triggeringCard: AdherentCard) : AdherentCar
     override fun rollback(gameState: GameState) {
         with(gameState.activePlayer) {
             mana += triggeringCard.manaCost
-            tableCards.remove(triggeringCard)
+            tableCards.removeExact(triggeringCard)
             handCards.add(triggeringCard)
             triggeringCard.hasBeenUsedInCurrentTurn = false
         }
@@ -106,13 +108,13 @@ class FightAnotherAdherent(override val triggeringCard: AdherentCard, val target
 
         if (targetCard.currentHealthPoints <= 0) {
             val enemyPlayer = getOpponent(activePlayer)
-            val removedAt = enemyPlayer.tableCards.indexOf(targetCard)
+            val removedAt = enemyPlayer.tableCards.indexOfExact(targetCard)
             val removedAdherent = enemyPlayer.tableCards.removeAt(removedAt)
             enemyPlayerKilledAdherent = Pair(removedAt, removedAdherent)
         }
 
         if (triggeringCard.currentHealthPoints <= 0) {
-            val removedAt = activePlayer.tableCards.indexOf(triggeringCard)
+            val removedAt = activePlayer.tableCards.indexOfExact(triggeringCard)
             val removedAdherent = activePlayer.tableCards.removeAt(removedAt)
             activePlayerKilledAdherent = Pair(removedAt, removedAdherent)
         }
@@ -161,7 +163,7 @@ class HitOne(override val triggeringCard: Card, val targetCard: AdherentCard, va
         with(gameState) {
             targetCard.currentHealthPoints -= damage
             if (targetCard.currentHealthPoints <= 0) {
-                removedAtIndex = getOpponent(activePlayer).tableCards.indexOf(targetCard)
+                removedAtIndex = getOpponent(activePlayer).tableCards.indexOfExact(targetCard)
                 killedAdherent = getOpponent(activePlayer).tableCards.removeAt(removedAtIndex)
             }
         }
@@ -190,7 +192,7 @@ class HitAllEnemies(override val triggeringCard: Card, val damage: Int) : SpellC
                 it.currentHealthPoints -= damage
 
                 if (it.currentHealthPoints <= 0) {
-                    removedIndices.add(getOpponent(activePlayer).tableCards.indexOf(it))
+                    removedIndices.add(getOpponent(activePlayer).tableCards.indexOfExact(it))
                     val killedAdherent = getOpponent(activePlayer).tableCards.removeAt(removedIndices.last())
                     killedAdherents += killedAdherent
                 }

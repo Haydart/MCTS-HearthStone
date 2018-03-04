@@ -4,7 +4,6 @@ import GameState
 import actions.*
 import gGameInstance
 import javafx.application.Application
-import javafx.event.ActionEvent
 import javafx.event.EventHandler
 import javafx.geometry.Pos
 import javafx.scene.Scene
@@ -15,9 +14,10 @@ import javafx.scene.layout.HBox
 import javafx.scene.layout.VBox
 import javafx.scene.shape.Circle
 import javafx.stage.Stage
-import models.AdherentCard
 import models.Card
 import models.Player
+import pop
+import push
 
 const val PLAYER_TABLE_HEIGHT = 150.0
 const val PLAYER_HAND_HEIGHT = 100.0
@@ -39,6 +39,9 @@ class GameWindow: Application() {
 
     var selectedCard: CardVis? = null
     var availableActionsVis: MutableList<Pair<Action, Circle>> = mutableListOf()
+
+    val historyActions: MutableList<Action> = mutableListOf()
+    val undoActionsHistory: MutableList<Action> = mutableListOf()
 
     override fun start(stage: Stage) {
         initUI(stage)
@@ -79,12 +82,26 @@ class GameWindow: Application() {
         }
     }
 
-    private fun initNextTurnBtnUI() {
+    private fun initNextTurnBtnUI(rightPanel: VBox) {
         val nextTurnBtn: Button = Button("Next Turn!")
-        nextTurnBtn.setOnAction({ event: ActionEvent ->
+        nextTurnBtn.setOnAction({
             onNextBtnCalled()
         })
-        boardRoot.right = nextTurnBtn
+        rightPanel.children.add(nextTurnBtn)
+    }
+
+    private fun initUndoRedoActionBtnUI(rightPanel: VBox) {
+        val undoActionBtn: Button = Button("Undo action")
+        undoActionBtn.setOnAction({
+            onUndoActionCalled()
+        })
+        rightPanel.children.add(undoActionBtn)
+
+        val redoActionBtn: Button = Button("Redo action")
+        redoActionBtn.setOnAction({
+            onRedoActionCalled()
+        })
+        rightPanel.children.add(redoActionBtn)
     }
 
     private fun initTableUI() {
@@ -114,13 +131,23 @@ class GameWindow: Application() {
         }
     }
 
+    private fun initRightPanelUI() {
+        val rightPanel = VBox(5.0)
+
+        initNextTurnBtnUI(rightPanel)
+        initUndoRedoActionBtnUI(rightPanel)
+
+        boardRoot.right = rightPanel
+    }
+
     private fun initUI(stage: Stage) {
 
         boardRoot = BorderPane()
 
         initPlayerHandUI()
         initLeftPanelUI()
-        initNextTurnBtnUI()
+        initLeftPanelUI()
+        initRightPanelUI()
         initTableUI()
 
         val scene = Scene(boardRoot, SCENE_WIDTH, SCENE_HEIGHT)
@@ -141,16 +168,12 @@ class GameWindow: Application() {
 
             // force EndTurn action
             val endAction = EndTurn()
+            // force redo all history actions
+            while (undoActionsHistory.isNotEmpty()) {
+                onRedoActionCalled()
+            }
             endAction.resolve(state)
-//
-//            // force change active player (possibly may take place in EndTurn action)
-//            state.activePlayer = state.getOpponent(state.activePlayer)
-//
-//            // force increment game turn (possibly may take place in EndTurn action)
-//            state.turnNumber++
-//
-//            // force active player mana update (possibly may take place in EndTurn action)
-//            state.activePlayer.mana = (state.turnNumber - 1) / 2 + 1
+            historyActions.push(endAction)
 
             //it might be handled in other way if we choose to force update everything instead of just selected board items
             val inHandBeforeDraw = state.activePlayer.handCards.size
@@ -167,6 +190,28 @@ class GameWindow: Application() {
         }
     }
 
+    fun onUndoActionCalled() {
+        if (historyActions.isNotEmpty()) {
+            val lastItem = historyActions.pop()
+            gGameInstance?.let {
+                lastItem.rollback(it.gameState)
+                updateBoard(it.gameState)
+            }
+            undoActionsHistory.push(lastItem)
+        }
+    }
+
+    fun onRedoActionCalled() {
+        if (undoActionsHistory.isNotEmpty()) {
+            val lastItem = undoActionsHistory.pop()
+            gGameInstance?.let {
+                lastItem.resolve(it.gameState)
+                updateBoard(it.gameState)
+            }
+            historyActions.push(lastItem)
+        }
+    }
+
     private fun createActionMarker(card: CardVis, cardAction: CardAction, state: GameState): Pair<Action, Circle> {
         val windowHandle = this
         lateinit var actionMarker: Pair<Action, Circle>
@@ -174,103 +219,41 @@ class GameWindow: Application() {
             is PlaceAdherentCard -> {
                 val markerVis = Circle(boardRoot.width / 2, boardRoot.height / 2, ACTION_MARKER_RADIUS)
                 actionMarker = Pair<Action, Circle>(cardAction, markerVis)
-                markerVis.onMouseClicked = EventHandler<MouseEvent> {
-                    cardAction.resolve(state)
-                    windowHandle.deployCard(card)
-                    windowHandle.onActionPlayed()
-                }
             }
             is HitOne -> {
                 val otherAdherent = cardAction.targetCard
                 lateinit var otherVis: CardVis
                 getEnemyTableVis(state).children.forEach {
-                    if ((it as CardVis).cardModel == otherAdherent) {
-                        otherVis = it
+                    if ((it as CardVis).cardModel === otherAdherent) {
+                        otherVis = (it as CardVis)
                     }
                 }
                 val boundsInScene = otherVis.localToScene(otherVis.boundsInLocal)
                 val markerVis = Circle(boundsInScene.minX + boundsInScene.width / 2, boundsInScene.minY + boundsInScene.height / 2, ACTION_MARKER_RADIUS)
                 actionMarker = Pair<Action, Circle>(cardAction, markerVis)
-
-                markerVis.onMouseClicked = EventHandler<MouseEvent> {
-                    cardAction.resolve(state)
-                    windowHandle.discardCard(card)
-                    otherVis.update()
-                    if (otherAdherent.currentHealthPoints <= 0) {
-                        getEnemyTableVis(state).children.remove(otherVis)
-                    }
-                    windowHandle.onActionPlayed()
-                }
             }
             is HitAllEnemies -> {
                 val enemyTable = getEnemyTableVis(state)
                 val boundsInScene = enemyTable.localToScene(enemyTable.boundsInLocal)
                 val markerVis = Circle(boundsInScene.minX + boundsInScene.width / 2, boundsInScene.minY + boundsInScene.height / 2, ACTION_MARKER_RADIUS)
                 actionMarker = Pair<Action, Circle>(cardAction, markerVis)
-
-                markerVis.onMouseClicked = EventHandler<MouseEvent> {
-                    cardAction.resolve(state)
-                    windowHandle.discardCard(card)
-
-                    enemyTable.children.forEach {
-                        (it as CardVis).update()
-                    }
-
-                    enemyTable.children.removeIf {
-                        ((it as CardVis).cardModel as AdherentCard).currentHealthPoints <= 0
-                    }
-
-                    windowHandle.onActionPlayed()
-                }
             }
             is HealAll -> {
 
                 val markerVis = Circle(boardRoot.width / 2, boardRoot.height / 2, ACTION_MARKER_RADIUS)
                 actionMarker = Pair<Action, Circle>(cardAction, markerVis)
-
-                markerVis.onMouseClicked = EventHandler<MouseEvent> {
-                    cardAction.resolve(state)
-                    windowHandle.discardCard(card)
-
-                    handPlayer1.children.forEach {
-                        (it as CardVis).update()
-                    }
-
-                    handPlayer2.children.forEach {
-                        (it as CardVis).update()
-                    }
-
-                    windowHandle.onActionPlayed()
-                }
             }
             is FightAnotherAdherent -> {
                 val otherAdherent = cardAction.targetCard
                 lateinit var otherVis: CardVis
                 getEnemyTableVis(state).children.forEach {
-                    if ((it as CardVis).cardModel == otherAdherent) {
-                        otherVis = it
+                    if ((it as CardVis).cardModel === otherAdherent) {
+                        otherVis = (it as CardVis)
                     }
                 }
                 val boundsInScene = otherVis.localToScene(otherVis.boundsInLocal)
                 val markerVis = Circle(boundsInScene.minX + boundsInScene.width / 2, boundsInScene.minY + boundsInScene.height / 2, ACTION_MARKER_RADIUS)
                 actionMarker = Pair<Action, Circle>(cardAction, markerVis)
-
-                markerVis.onMouseClicked = EventHandler<MouseEvent> {
-                    cardAction.resolve(state)
-
-                    otherVis.update()
-                    card.update()
-
-                    if (otherAdherent.currentHealthPoints <= 0) {
-                        getEnemyTableVis(state).children.remove(otherVis)
-                    }
-
-                    if ((card.cardModel as AdherentCard).currentHealthPoints <= 0) {
-                        getActiveTableVis(state).children.remove(card)
-                    }
-
-                    windowHandle.onActionPlayed()
-                }
             }
             is FightEnemyHero -> {
                 val enemyPlayerVis: PlayerVis = getEnemyPlayerVis(state)
@@ -278,19 +261,15 @@ class GameWindow: Application() {
                 val boundsInScene = enemyPlayerVis.localToScene(enemyPlayerVis.boundsInLocal)
                 val markerVis = Circle(boundsInScene.minX + boundsInScene.width / 2, boundsInScene.minY + boundsInScene.height / 2, ACTION_MARKER_RADIUS)
                 actionMarker = Pair<Action, Circle>(cardAction, markerVis)
-
-                markerVis.onMouseClicked = EventHandler<MouseEvent> {
-                    cardAction.resolve(state)
-
-                    enemyPlayerVis.update()
-                    card.update()
-
-                    windowHandle.onActionPlayed()
-                }
             }
             else -> {
                 throw IllegalStateException("Action: $cardAction  triggered by Card: ${card.cardModel}  is not handled in visualisation")
             }
+        }
+
+        actionMarker.second.onMouseClicked = EventHandler<MouseEvent> {
+            cardAction.resolve(state)
+            windowHandle.onActionPlayed(actionMarker.first)
         }
 
         return actionMarker
@@ -304,6 +283,7 @@ class GameWindow: Application() {
         gGameInstance?.let {
             val actions = card.cardModel.getActionsFun(card.cardModel, it.gameState.activePlayer, it.gameState.getOpponent(it.gameState.activePlayer))
             val state = it.gameState
+            println(actions)
             actions.forEach {
                 val actionMarker = createActionMarker(card, it, state)
                 availableActionsVis.add(actionMarker)
@@ -312,10 +292,11 @@ class GameWindow: Application() {
         }
     }
 
-    fun onActionPlayed() {
+    fun onActionPlayed(actionCalled: Action) {
         gGameInstance?.let {
             clearActionMarkers()
             selectedCard?.setSelected(false)
+            historyActions.push(actionCalled)
             updateBoard(it.gameState)
         }
     }
@@ -332,8 +313,26 @@ class GameWindow: Application() {
         player1Vis.update()
         player2Vis.update()
 
+        updatePlayerCards(player1Vis, handPlayer1, tablePlayer1)
+        updatePlayerCards(player2Vis, handPlayer2, tablePlayer2)
+
         markActivePlayer(state)
         markActiveCards(state)
+    }
+
+    private fun updatePlayerCards(playerVis: PlayerVis, playerHandVis: HBox, playerTableVis: HBox) {
+        val playerHand = playerVis.player.handCards
+        val playerTable = playerVis.player.tableCards
+
+        playerHandVis.children.clear()
+        playerHand.forEach {
+            playerHandVis.children.add(createCardVis(it))
+        }
+
+        playerTableVis.children.clear()
+        playerTable.forEach {
+            playerTableVis.children.add(createCardVis(it))
+        }
     }
 
     fun deployCard(card: CardVis) {
@@ -375,32 +374,32 @@ class GameWindow: Application() {
     }
 
     private fun markActivePlayer(state: GameState) {
-        player1Vis.setActive(state.activePlayer == state.player1)
-        player2Vis.setActive(state.activePlayer == state.player2)
+        player1Vis.setActive(state.activePlayer === state.player1)
+        player2Vis.setActive(state.activePlayer === state.player2)
     }
 
     private fun getActivePlayerVis(state: GameState): PlayerVis {
-        return if (state.activePlayer == state.player1) player1Vis else player2Vis
+        return if (state.activePlayer === state.player1) player1Vis else player2Vis
     }
 
     private fun getEnemyPlayerVis(state: GameState): PlayerVis {
-        return if (state.activePlayer != state.player1) player1Vis else player2Vis
+        return if (state.activePlayer !== state.player1) player1Vis else player2Vis
     }
 
     private fun getActiveHandVis(state: GameState): HBox {
-        return if (state.activePlayer == state.player1) handPlayer1 else handPlayer2
+        return if (state.activePlayer === state.player1) handPlayer1 else handPlayer2
     }
 
     private fun getEnemyHandVis(state: GameState): HBox {
-        return if (state.activePlayer != state.player1) handPlayer1 else handPlayer2
+        return if (state.activePlayer !== state.player1) handPlayer1 else handPlayer2
     }
 
     private fun getActiveTableVis(state: GameState): HBox {
-        return if (state.activePlayer == state.player1) tablePlayer1 else tablePlayer2
+        return if (state.activePlayer === state.player1) tablePlayer1 else tablePlayer2
     }
 
     private fun getEnemyTableVis(state: GameState): HBox {
-        return if (state.activePlayer != state.player1) tablePlayer1 else tablePlayer2
+        return if (state.activePlayer !== state.player1) tablePlayer1 else tablePlayer2
     }
 
     fun launchWindow(args: Array<String>) {
