@@ -16,7 +16,7 @@ open class Node(
         val gamesPlayed: Int = 0,
         val gamesWon: Float = 0f
 ) {
-    override fun toString() = "gamestate = ${gameState.activePlayer}\n\t\t\tchildNodes = ${childNodes}"
+    override fun toString() = "gamestate = ${gameState.player1} childNodes = \n\t\t\t${childNodes}"
 }
 
 class CardDrawingNode(

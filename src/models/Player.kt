@@ -7,7 +7,6 @@ import actions.PlaceAdherentCard
 import containsExact
 import indexOfExact
 import removeExact
-import containsExact
 import java.util.*
 
 
@@ -23,11 +22,10 @@ data class Player(
         val tableCards: MutableList<AdherentCard>,
         var healthPoints: Int,
         var mana: Int = 1,
-        val name: String
+        val name: String,
+        var turnsWithDeckCardsDepleted: Int = 0,
+        var discardedCount: Int = 0
 ) {
-
-    var turnsWithDeckCardsDepleted = 0
-    var discardedCount = 0
 
     fun getAvailableActions(enemyPlayer: Player): List<Action> {
         val actionsListBeforeConstraining = mutableListOf<CardAction>()
@@ -89,7 +87,9 @@ data class Player(
                 tableCardsCopy,
                 healthPoints,
                 mana,
-                name
+                name,
+                turnsWithDeckCardsDepleted = turnsWithDeckCardsDepleted,
+                discardedCount = discardedCount
         )
     }
 

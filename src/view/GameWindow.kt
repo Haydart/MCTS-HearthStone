@@ -1,20 +1,19 @@
 package view
 
-import gGameInstance
 import GameState
 import actions.*
+import gGameInstance
 import javafx.application.Application
-import javafx.scene.Scene
-import javafx.stage.Stage
-import javafx.event.EventHandler;
+import javafx.event.EventHandler
 import javafx.geometry.Pos
+import javafx.scene.Scene
 import javafx.scene.control.Button
-import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.*
-import javafx.event.ActionEvent
-import javafx.scene.Node
+import javafx.scene.input.MouseEvent
+import javafx.scene.layout.BorderPane
+import javafx.scene.layout.HBox
+import javafx.scene.layout.VBox
 import javafx.scene.shape.Circle
-import models.AdherentCard
+import javafx.stage.Stage
 import models.Card
 import models.Player
 import pop
@@ -41,8 +40,8 @@ class GameWindow: Application() {
     var selectedCard: CardVis? = null
     var availableActionsVis: MutableList<Pair<Action, Circle>> = mutableListOf()
 
-    val historyActions: MutableList<Action> = mutableListOf()
-    val undoActionsHistory: MutableList<Action> = mutableListOf()
+    private val historyActions: MutableList<Action> = mutableListOf()
+    private val undoActionsHistory: MutableList<Action> = mutableListOf()
 
     override fun start(stage: Stage) {
         initUI(stage)
@@ -84,7 +83,7 @@ class GameWindow: Application() {
     }
 
     private fun initNextTurnBtnUI(rightPanel: VBox) {
-        val nextTurnBtn: Button = Button("Next Turn!")
+        val nextTurnBtn = Button("Next Turn!")
         nextTurnBtn.setOnAction({
             onNextBtnCalled()
         })
@@ -92,13 +91,13 @@ class GameWindow: Application() {
     }
 
     private fun initUndoRedoActionBtnUI(rightPanel: VBox) {
-        val undoActionBtn: Button = Button("Undo action")
+        val undoActionBtn = Button("Undo action")
         undoActionBtn.setOnAction({
             onUndoActionCalled()
         })
         rightPanel.children.add(undoActionBtn)
 
-        val redoActionBtn: Button = Button("Redo action")
+        val redoActionBtn = Button("Redo action")
         redoActionBtn.setOnAction({
             onRedoActionCalled()
         })
