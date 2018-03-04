@@ -40,8 +40,8 @@ class GameWindow: Application() {
     var selectedCard: CardVis? = null
     var availableActionsVis: MutableList<Pair<Action, Circle>> = mutableListOf()
 
-    val historyActions: MutableList<Action> = mutableListOf()
-    val undoActionsHistory: MutableList<Action> = mutableListOf()
+    private val historyActions: MutableList<Action> = mutableListOf()
+    private val undoActionsHistory: MutableList<Action> = mutableListOf()
 
     override fun start(stage: Stage) {
         initUI(stage)
@@ -83,7 +83,7 @@ class GameWindow: Application() {
     }
 
     private fun initNextTurnBtnUI(rightPanel: VBox) {
-        val nextTurnBtn: Button = Button("Next Turn!")
+        val nextTurnBtn = Button("Next Turn!")
         nextTurnBtn.setOnAction({
             onNextBtnCalled()
         })
@@ -91,13 +91,13 @@ class GameWindow: Application() {
     }
 
     private fun initUndoRedoActionBtnUI(rightPanel: VBox) {
-        val undoActionBtn: Button = Button("Undo action")
+        val undoActionBtn = Button("Undo action")
         undoActionBtn.setOnAction({
             onUndoActionCalled()
         })
         rightPanel.children.add(undoActionBtn)
 
-        val redoActionBtn: Button = Button("Redo action")
+        val redoActionBtn = Button("Redo action")
         redoActionBtn.setOnAction({
             onRedoActionCalled()
         })
