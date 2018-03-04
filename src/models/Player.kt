@@ -45,6 +45,7 @@ data class Player(
                 .filter(this::cardWasNotUsedInCurrentTurn) + EndTurn()
     }
 
+    private fun userCanAffordTheCardIfInHand(action: CardAction) = mana >= action.triggeringCard.manaCost || (action.triggeringCard is AdherentCard && tableCards.containsExact(action.triggeringCard as AdherentCard))
 
     private fun placedAdherentCardsCountIsBelowLimit(action: CardAction) = action !is PlaceAdherentCard || tableCards.size < MAX_ADHERENT_CARDS_LAID_OUT
 
