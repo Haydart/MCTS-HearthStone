@@ -2,7 +2,7 @@ import actions.EndTurn
 import gametree.CardDrawingNode
 import gametree.GameTree
 import gametree.Node
-import greedy_agents.AggressiveGreedyAgent
+import greedy_agents.ControllingGreedyAgent
 import greedy_agents.RandomGreedyAgent
 import models.Card
 import models.Player
@@ -22,7 +22,7 @@ class Game(var gameState: GameState) {
     private val gameTree = GameTree(initialRootNode)
 
     private val randomAgent = RandomGreedyAgent()
-    private val aggressiveAgent = AggressiveGreedyAgent()
+    private val greedyAgent = ControllingGreedyAgent()
 
     init {
         (0 until 3).forEach { gameState.player1.takeCardFromDeck() }
@@ -113,7 +113,7 @@ class Game(var gameState: GameState) {
         if (currentPlayer == gameState.player1) {
             randomAgent.performTurn(gameState)
         } else {
-            aggressiveAgent.performTurn(gameState)
+            greedyAgent.performTurn(gameState)
         }
     }
 
