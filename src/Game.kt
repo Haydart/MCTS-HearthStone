@@ -94,10 +94,11 @@ class Game(var gameState: GameState) {
         with(gameState) {
             while (!gameEndConditionsMet()) {
                 performTurn(activePlayer)
-            }
 
-            println("Game state after turn: ")
-            println(gameState)
+                println("Game state after turn: ")
+                println(gameState)
+                println("______________________________")
+            }
 
             val winningPlayer = if (player1.healthPoints < player2.healthPoints) player2 else player1
             println("Game end, the winning player is \n$winningPlayer")

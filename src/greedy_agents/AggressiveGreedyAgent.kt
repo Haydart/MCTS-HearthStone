@@ -19,8 +19,8 @@ class AggressiveGreedyAgent : GreedyAgent() {
     override fun performTurn(globalGameStateAfterCardDrawing: GameState) {
         val gameStateActionsListMap = mutableMapOf<GameState, List<Action>>()
         generateTurnTransitionalStates(globalGameStateAfterCardDrawing, gameStateActionsListMap)
-        var bestEvaluationSoFar = Float.MIN_VALUE
-        lateinit var movesToPerform: Pair<GameState, List<Action>>
+        var bestEvaluationSoFar = -Float.MAX_VALUE //Float min val is positive
+        lateinit var movesToPerform: List<Action>
 
         gameStateActionsListMap.forEach { gameState, actionsList ->
             println(gameState)
@@ -32,14 +32,16 @@ class AggressiveGreedyAgent : GreedyAgent() {
 
             if (evaluation > bestEvaluationSoFar) {
                 bestEvaluationSoFar = evaluation
-                movesToPerform = gameState to actionsList
+                movesToPerform = actionsList
             }
         }
 
-        //todo make the moves
+        println("Moves to perform: $movesToPerform")
+
+        movesToPerform.forEach { it.resolve(globalGameStateAfterCardDrawing) }
     }
 
-    fun evaluateGameState(gameState: GameState): Float {
+    private fun evaluateGameState(gameState: GameState): Float {
         return with(gameState) {
             val enemyPlayer = getOpponent(activePlayer)
             activePlayer.healthPoints * OWN_HP_WEIGHT + enemyPlayer.healthPoints * ENEMY_HP_WEIGHT +
