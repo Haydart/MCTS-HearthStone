@@ -4,14 +4,15 @@ import actions.CardAction
 import actions.FightAnotherAdherent
 import actions.FightEnemyHero
 import actions.PlaceAdherentCard
+import containsExact
 
 val defaultAdherentActionsFun: (Card, Player, Player) -> List<CardAction> = { triggeringCard, (handCards, _, tableCards), enemyPlayer ->
     triggeringCard as AdherentCard // smart casting
     val availableActions = mutableListOf<CardAction>()
 
-    if (triggeringCard in handCards) {
+    if (handCards.containsExact(triggeringCard)) {
         availableActions += PlaceAdherentCard(triggeringCard)
-    } else if (triggeringCard in tableCards && !triggeringCard.hasBeenUsedInCurrentTurn) {
+    } else if (tableCards.containsExact(triggeringCard) && !triggeringCard.hasBeenUsedInCurrentTurn) {
         enemyPlayer.tableCards.forEach { enemyCard ->
             availableActions += FightAnotherAdherent(triggeringCard, enemyCard)
         }

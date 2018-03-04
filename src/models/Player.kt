@@ -4,6 +4,10 @@ import actions.Action
 import actions.CardAction
 import actions.EndTurn
 import actions.PlaceAdherentCard
+import containsExact
+import indexOfExact
+import removeExact
+import containsExact
 import java.util.*
 
 
@@ -41,7 +45,6 @@ data class Player(
                 .filter(this::cardWasNotUsedInCurrentTurn) + EndTurn()
     }
 
-    private fun userCanAffordTheCardIfInHand(action: CardAction) = mana >= action.triggeringCard.manaCost || action.triggeringCard in tableCards
 
     private fun placedAdherentCardsCountIsBelowLimit(action: CardAction) = action !is PlaceAdherentCard || tableCards.size < MAX_ADHERENT_CARDS_LAID_OUT
 
@@ -50,13 +53,13 @@ data class Player(
     fun takeCardFromDeck() = handCards.add(deckCards.takeRandomElement())
 
     fun takeCardFromDeck(card: Card): Int {
-        val cardIndex = deckCards.indexOf(card)
+        val cardIndex = deckCards.indexOfExact(card)
         handCards.add(deckCards.removeAt(cardIndex))
         return cardIndex
     }
 
     fun returnCardToDeck(card: Card, index: Int) {
-        handCards.remove(card)
+        handCards.removeExact(card)
         deckCards.add(index, card)
     }
 
