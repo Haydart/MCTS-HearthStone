@@ -51,6 +51,7 @@ class EndTurn : Action() {
             activePlayer = getOpponent(activePlayer)
             activePlayer.mana = manaPointsAtTurnsEnd
             gameState.turnNumber--
+            usedCardsList.clear()
         }
     }
 }
@@ -71,6 +72,7 @@ abstract class SpellCardAction : CardAction() {
         gameState.activePlayer.discardedCount--
         gameState.activePlayer.handCards.add(spellRemovedAtIndex, triggeringCard)
         gameState.activePlayer.mana += triggeringCard.manaCost
+        spellRemovedAtIndex = -1
     }
 }
 
@@ -135,6 +137,8 @@ class FightAnotherAdherent(override val triggeringCard: AdherentCard, val target
         targetCard.currentHealthPoints += triggeringCard.attackStrength
         triggeringCard.currentHealthPoints += targetCard.attackStrength
         triggeringCard.hasBeenUsedInCurrentTurn = false
+        activePlayerKilledAdherent = null
+        enemyPlayerKilledAdherent = null
     }
 }
 
@@ -178,6 +182,7 @@ class HitOne(override val triggeringCard: Card, val targetCard: AdherentCard, va
             }
             targetCard.currentHealthPoints += damage
         }
+        removedAtIndex = -1
         super.rollback(gameState)
     }
 }
@@ -233,6 +238,7 @@ class HealOne(override val triggeringCard: Card, val targetCard: AdherentCard, v
     override fun rollback(gameState: GameState) {
         super.rollback(gameState)
         targetCard.currentHealthPoints = targetCard.currentHealthPoints - effectivelyHealedAmount
+        effectivelyHealedAmount = 0
     }
 }
 
@@ -264,6 +270,9 @@ class HealAll(override val triggeringCard: Card, val healAmount: Int) : SpellCar
         allTableCards.forEachIndexed { index, adherentCard ->
             adherentCard.currentHealthPoints -= effectivelyHealedAmounts[index]
         }
+
+        effectivelyHealedAmounts.clear()
+        allTableCards.clear()
     }
 }
 
