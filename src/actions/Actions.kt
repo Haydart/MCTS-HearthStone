@@ -4,7 +4,9 @@ import GameState
 import indexOfExact
 import models.AdherentCard
 import models.Card
+import models.MAX_MANA
 import removeExact
+import java.lang.Integer.min
 
 /**
  * Created by r.makowiecki on 24/02/2018.
@@ -37,7 +39,7 @@ class EndTurn : Action() {
 
             manaPointsAtTurnsEnd = activePlayer.mana
             gameState.turnNumber++
-            activePlayer.mana = (gameState.turnNumber - 1) / 2 + 1
+            activePlayer.mana = min(gameState.turnNumber / 2 + 1, MAX_MANA)
             activePlayer = getOpponent(activePlayer)
         }
     }
