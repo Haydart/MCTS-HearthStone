@@ -255,7 +255,9 @@ class GameWindow: Application() {
             val state = it.gameState
             simulateCardDraw()
 
-            it.getActivePlayerController(state)?.performTurn(state)
+            it.getActivePlayerController(state)?.performTurn(state)?.forEach { performedAction ->
+                historyActions.push(performedAction)
+            }
 
             // update board
             selectedCard?.setSelected(false)
@@ -270,7 +272,9 @@ class GameWindow: Application() {
 
             val activeController = it.getActivePlayerController(it.gameState)
             if (activeController != null) {
-                activeController.performTurn(it.gameState)
+                activeController.performTurn(it.gameState).forEach {performedAction ->
+                    historyActions.push(performedAction)
+                }
             } else {
                 // force EndTurn action
                 val endAction = EndTurn()
