@@ -16,7 +16,7 @@ private const val ADHERENT_HP_SUM_WEIGHT = 1
 
 class AggressiveGreedyAgent : GreedyAgent() {
 
-    override fun performTurn(globalGameStateAfterCardDrawing: GameState) {
+    override fun performTurn(globalGameStateAfterCardDrawing: GameState): List<Action> {
         val gameStateActionsListMap = mutableMapOf<GameState, List<Action>>()
         generateTurnTransitionalStates(globalGameStateAfterCardDrawing, gameStateActionsListMap)
         var bestEvaluationSoFar = -Float.MAX_VALUE //Float min val is positive
@@ -39,6 +39,7 @@ class AggressiveGreedyAgent : GreedyAgent() {
         println("Moves to perform: $movesToPerform")
 
         movesToPerform.forEach { it.resolve(globalGameStateAfterCardDrawing) }
+        return movesToPerform
     }
 
     private fun evaluateGameState(gameState: GameState): Float {
