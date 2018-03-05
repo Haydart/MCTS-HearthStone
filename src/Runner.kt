@@ -26,7 +26,9 @@ fun main(args: Array<String>) {
             createInitialDeck(),
             mutableListOf(),
             healthPoints = 20,
-            name = "Player1"
+            name = "Random agent",
+            turnsWithDeckCardsDepleted = 0,
+            discardedCount = 0
     )
 
     val player2 = Player(
@@ -34,7 +36,9 @@ fun main(args: Array<String>) {
             createInitialDeck(),
             mutableListOf(),
             healthPoints = 20,
-            name = "Player2"
+            name = "Controlling agent",
+            turnsWithDeckCardsDepleted = 0,
+            discardedCount = 0
     )
 
     val gameInstance = Game(GameState(player1, player2, turnNumber = 0, activePlayer = player1))
@@ -67,15 +71,11 @@ fun createInitialDeck(): MutableList<Card> = mutableListOf<Card>().apply {
     }
 }
 
-val dragonBreathEffect: (Card, Player, Player) -> List<CardAction> = { triggeringCard, _, enemyPlayer ->
+val dragonBreathEffect: (Card, Player, Player) -> List<CardAction> = { triggeringCard, _, _ ->
     listOf(HitAllEnemies(triggeringCard, damage = 2))
 }
 
-val circleOfHealingEffect: (Card, Player, Player) -> List<CardAction> = { triggeringCard, currentPlayer, enemyPlayer ->
-    val allTableCards = mutableListOf<AdherentCard>()
-    currentPlayer.tableCards.forEach { allTableCards.add(it) }
-    enemyPlayer.tableCards.forEach { allTableCards.add(it) }
-
+val circleOfHealingEffect: (Card, Player, Player) -> List<CardAction> = { triggeringCard, _, _ ->
     listOf(HealAll(triggeringCard, healAmount = 3))
 }
 
