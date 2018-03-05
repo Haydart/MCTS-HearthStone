@@ -188,14 +188,17 @@ class HitAllEnemies(override val triggeringCard: Card, val damage: Int) : SpellC
     override fun resolve(gameState: GameState) {
         super.resolve(gameState)
         with(gameState) {
-            getOpponent(activePlayer).tableCards.forEach {
-                it.currentHealthPoints -= damage
+            getOpponent(activePlayer).tableCards.forEachIndexed { loopIndex, adherentCard ->
+                adherentCard.currentHealthPoints -= damage
 
-                if (it.currentHealthPoints <= 0) {
-                    removedIndices.add(getOpponent(activePlayer).tableCards.indexOfExact(it))
-                    val killedAdherent = getOpponent(activePlayer).tableCards.removeAt(removedIndices.last())
-                    killedAdherents += killedAdherent
+                if (adherentCard.currentHealthPoints <= 0) {
+                    removedIndices.add(loopIndex)
                 }
+            }
+            removedIndices.forEachIndexed {loopIndex, cardIndex ->
+                val removeAtIndex = cardIndex - loopIndex // positions are moved left after removing each element
+                val killedAdherent = getOpponent(activePlayer).tableCards.removeAt(removeAtIndex)
+                killedAdherents += killedAdherent
             }
         }
     }
@@ -209,6 +212,8 @@ class HitAllEnemies(override val triggeringCard: Card, val damage: Int) : SpellC
                 it.currentHealthPoints += damage
             }
         }
+        removedIndices.clear()
+        killedAdherents.clear()
         super.rollback(gameState)
     }
 }
