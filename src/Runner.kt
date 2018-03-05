@@ -41,10 +41,10 @@ fun main(args: Array<String>) {
             discardedCount = 0
     )
 
-    val gameInstance = Game(GameState(player1, player2, turnNumber = 0, activePlayer = player1))
+    val gameInstance = Game(GameState(player1, player2, turnNumber = 1, activePlayer = player1))
     gGameInstance = gameInstance
 
-    val gameMode = GameMode.TEXT
+    val gameMode = GameMode.GUI
     when (gameMode) {
         GameMode.TEXT -> {
             gameInstance.run()

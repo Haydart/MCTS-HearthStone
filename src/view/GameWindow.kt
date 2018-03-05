@@ -3,21 +3,30 @@ package view
 import GameState
 import actions.*
 import gGameInstance
+import greedy_agents.AggressiveGreedyAgent
+import greedy_agents.ControllingGreedyAgent
+import greedy_agents.GreedyAgent
+import greedy_agents.RandomGreedyAgent
 import javafx.application.Application
 import javafx.event.EventHandler
 import javafx.geometry.Pos
 import javafx.scene.Scene
 import javafx.scene.control.Button
+import javafx.scene.control.RadioButton
+import javafx.scene.control.ToggleGroup
 import javafx.scene.input.MouseEvent
 import javafx.scene.layout.BorderPane
 import javafx.scene.layout.HBox
 import javafx.scene.layout.VBox
 import javafx.scene.shape.Circle
+import javafx.scene.text.Text
 import javafx.stage.Stage
 import models.Card
 import models.Player
 import pop
 import push
+import kotlin.reflect.full.createInstance
+
 
 const val PLAYER_TABLE_HEIGHT = 150.0
 const val PLAYER_HAND_HEIGHT = 100.0
@@ -36,6 +45,8 @@ class GameWindow: Application() {
     lateinit var tablePlayer2: HBox
     lateinit var player1Vis: PlayerVis
     lateinit var player2Vis: PlayerVis
+    lateinit var nextTurnBtn: Button
+    lateinit var startGameBtn: Button
 
     var selectedCard: CardVis? = null
     var availableActionsVis: MutableList<Pair<Action, Circle>> = mutableListOf()
@@ -72,6 +83,51 @@ class GameWindow: Application() {
         return card
     }
 
+    private fun createAgentSelection(playerVis: PlayerVis): VBox {
+        val agentSelectionBox = VBox()
+        agentSelectionBox.children.add(Text(playerVis.player.name + " Model"))
+        val toggleGroup = ToggleGroup()
+
+        val option1 = RadioButton("Player")
+        option1.toggleGroup = toggleGroup
+        option1.isSelected = true
+        agentSelectionBox.children.add(option1)
+
+        val option2 = RadioButton(RandomGreedyAgent::class.simpleName)
+        option2.toggleGroup = toggleGroup
+        option2.isSelected = false
+        agentSelectionBox.children.add(option2)
+
+        val option3 = RadioButton(ControllingGreedyAgent::class.simpleName)
+        option3.toggleGroup = toggleGroup
+        option3.isSelected = false
+        agentSelectionBox.children.add(option3)
+
+        val option4 = RadioButton(AggressiveGreedyAgent::class.simpleName)
+        option4.toggleGroup = toggleGroup
+        option4.isSelected = false
+        agentSelectionBox.children.add(option4)
+
+        toggleGroup.selectedToggleProperty().addListener { _, _, new_toggle ->
+            if (toggleGroup.selectedToggle != null) {
+                gGameInstance?.let {
+                    val controllerClassName = (new_toggle as RadioButton).text
+
+                    var newController: GreedyAgent? = null
+                    if (controllerClassName != "Player"){
+                        val kClass = Class.forName("greedy_agents." + controllerClassName).kotlin
+                        println(kClass)
+                        newController = (kClass.createInstance() as GreedyAgent)
+                    }
+
+                    it.setPlayerController(playerVis.player, newController)
+                }
+            }
+        }
+
+        return agentSelectionBox
+    }
+
     private fun initPlayerHandUI() {
 
         gGameInstance?.let {
@@ -83,11 +139,20 @@ class GameWindow: Application() {
     }
 
     private fun initNextTurnBtnUI(rightPanel: VBox) {
-        val nextTurnBtn = Button("Next Turn!")
+        nextTurnBtn = Button("Next Turn!")
         nextTurnBtn.setOnAction({
             onNextBtnCalled()
         })
+        nextTurnBtn.isDisable = true
         rightPanel.children.add(nextTurnBtn)
+    }
+
+    private fun initStartGameBtnUI(rightPanel: VBox) {
+        startGameBtn = Button("Start!")
+        startGameBtn.setOnAction({
+            onStartGameCalled()
+        })
+        rightPanel.children.add(startGameBtn)
     }
 
     private fun initUndoRedoActionBtnUI(rightPanel: VBox) {
@@ -128,12 +193,18 @@ class GameWindow: Application() {
             leftPanel.bottom = player1Vis
             player2Vis = PlayerVis(it.gameState.player2)
             leftPanel.top = player2Vis
+
+            val playerControllerSelection = VBox(25.0)
+            playerControllerSelection.children.add(createAgentSelection(player2Vis))
+            playerControllerSelection.children.add(createAgentSelection(player1Vis))
+            leftPanel.center = playerControllerSelection
         }
     }
 
     private fun initRightPanelUI() {
         val rightPanel = VBox(5.0)
 
+        initStartGameBtnUI(rightPanel)
         initNextTurnBtnUI(rightPanel)
         initUndoRedoActionBtnUI(rightPanel)
 
@@ -154,6 +225,8 @@ class GameWindow: Application() {
 
         gGameInstance?.let{
 
+            it.setPlayerController(it.gameState.player1, null)
+            it.setPlayerController(it.gameState.player2, null)
             updateBoard(it.gameState)
         }
 
@@ -162,26 +235,54 @@ class GameWindow: Application() {
         stage.show()
     }
 
-    fun onNextBtnCalled() {
+    private fun simulateCardDraw() {
+        //it might be handled in other way if we choose to force update everything instead of just selected board items
         gGameInstance?.let {
             val state = it.gameState
-
-            // force EndTurn action
-            val endAction = EndTurn()
-            // force redo all history actions
-            while (undoActionsHistory.isNotEmpty()) {
-                onRedoActionCalled()
-            }
-            endAction.resolve(state)
-            historyActions.push(endAction)
-
-            //it might be handled in other way if we choose to force update everything instead of just selected board items
             val inHandBeforeDraw = state.activePlayer.handCards.size
             it.drawCardOrGetPunished(state.activePlayer)
             val inHandAfterDraw = state.activePlayer.handCards.size
             if (inHandAfterDraw > inHandBeforeDraw) {
                 getActiveHandVis(state).children.add(createCardVis(state.activePlayer.handCards.last()))
             }
+        }
+    }
+
+    fun onStartGameCalled() {
+        gGameInstance?.let {
+            startGameBtn.isDisable = true
+            nextTurnBtn.isDisable = false
+            val state = it.gameState
+            simulateCardDraw()
+
+            it.getActivePlayerController(state)?.performTurn(state)
+
+            // update board
+            selectedCard?.setSelected(false)
+            selectedCard = null
+            updateBoard(state)
+        }
+    }
+
+    fun onNextBtnCalled() {
+        gGameInstance?.let {
+            val state = it.gameState
+
+            val activeController = it.getActivePlayerController(it.gameState)
+            if (activeController != null) {
+                activeController.performTurn(it.gameState)
+            } else {
+                // force EndTurn action
+                val endAction = EndTurn()
+                // force redo all history actions
+                while (undoActionsHistory.isNotEmpty()) {
+                    onRedoActionCalled()
+                }
+                endAction.resolve(state)
+                historyActions.push(endAction)
+            }
+
+            simulateCardDraw()
 
             // update board
             selectedCard?.setSelected(false)

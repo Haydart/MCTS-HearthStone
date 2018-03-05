@@ -3,6 +3,7 @@ import gametree.CardDrawingNode
 import gametree.GameTree
 import gametree.Node
 import greedy_agents.ControllingGreedyAgent
+import greedy_agents.GreedyAgent
 import greedy_agents.RandomGreedyAgent
 import models.Card
 import models.Player
@@ -24,11 +25,26 @@ class Game(var gameState: GameState) {
     private val randomAgent = RandomGreedyAgent()
     private val greedyAgent = ControllingGreedyAgent()
 
+    private var player1Controller: GreedyAgent? = null
+    private var player2Controller: GreedyAgent? = null
+
     init {
         (0 until 3).forEach { gameState.player1.takeCardFromDeck() }
         (0 until 4).forEach { gameState.player2.takeCardFromDeck() }
 
         initialRootNode.childNodes = generateCardDrawPossibleStates(initialRootNode)
+    }
+
+    fun getActivePlayerController(gameState: GameState): GreedyAgent? {
+        return if (gameState.activePlayer === gameState.player1) player1Controller else player2Controller
+    }
+
+    fun setPlayerController(player: Player, controller: GreedyAgent?) {
+        if (player === gameState.player1) {
+            player1Controller = controller
+        } else {
+            player2Controller = controller
+        }
     }
 
     private fun generateCardDrawPossibleStates(parentNode: Node? = null): List<Node> {
@@ -92,6 +108,9 @@ class Game(var gameState: GameState) {
 
     fun run() {
         with(gameState) {
+            player1Controller = randomAgent
+            player2Controller = greedyAgent
+
             while (!gameEndConditionsMet()) {
                 performTurn(activePlayer)
 
@@ -109,12 +128,7 @@ class Game(var gameState: GameState) {
 
     private fun performTurn(currentPlayer: Player) {
         drawCardOrGetPunished(currentPlayer)
-
-        if (currentPlayer == gameState.player1) {
-            randomAgent.performTurn(gameState)
-        } else {
-            greedyAgent.performTurn(gameState)
-        }
+        getActivePlayerController(gameState)?.performTurn(gameState)
     }
 
     private fun mctsSearch() {
