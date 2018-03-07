@@ -4,12 +4,14 @@ import gametree.GameTree
 import gametree.Node
 import greedy_agents.ControllingGreedyAgent
 import greedy_agents.RandomGreedyAgent
-import models.Card
-import models.Player
+import models.*
 import java.util.*
+import kotlin.math.ln
+import kotlin.math.sqrt
 
 const val TURN_TIME_MILLIS = 5000L
 const val PUNISHMENT_VALUE = 2
+const val MAGIC_C = 1
 
 class Game(var gameState: GameState) {
 
@@ -54,21 +56,20 @@ class Game(var gameState: GameState) {
             possibleEndStateNodes.add(drawNode)
         }
 
-//        if (cardToDrawProbability.isEmpty()) {
-//
-//            val punishmentNode = CardDrawingNode(1f, gameState.deepCopy(), listOf(), parentNode)
-//            punishPlayerWithEmptyDeck(punishmentNode.gameState.activePlayer)
-//            val punishmentNodeChildren = generatePossibleEndTurnGameStates(punishmentNode, punishmentNode.gameState)
-//            punishmentNode.childNodes = punishmentNodeChildren
-//            possibleEndStateNodes.add(punishmentNode)
-//        }
+        if (cardToDrawProbability.isEmpty()) {
+            val punishmentNode = CardDrawingNode(1f, gameState.deepCopy(), listOf(), parentNode)
+            punishPlayerWithEmptyDeck(punishmentNode.gameState.activePlayer)
+            val punishmentNodeChildren = generatePossibleEndTurnGameStates(punishmentNode, punishmentNode.gameState)
+            punishmentNode.childNodes = punishmentNodeChildren
+            possibleEndStateNodes.add(punishmentNode)
+        }
 
         return possibleEndStateNodes
     }
 
-    private fun generatePossibleEndTurnGameStates(parentNode: Node? = null, state: GameState): MutableList<Node> {
+    private fun generatePossibleEndTurnGameStates(parentNode: Node? = null, stateAfterCardDraw: GameState): MutableList<Node> {
         val endStatesList = LinkedList<GameState>()
-        generateTurnTransitionalStates(endStatesList, state)
+        generateTurnTransitionalStates(endStatesList, stateAfterCardDraw)
         return endStatesList.map {
             Node(it, LinkedList(), parentNode)
         }.toMutableList()
@@ -90,6 +91,25 @@ class Game(var gameState: GameState) {
         }
     }
 
+    private fun simulate(node: Node): GameResult {
+        with(node.gameState) {
+            while (!gameEndConditionsMet()) {
+                drawCardOrGetPunished(activePlayer)
+                if (!gameEndConditionsMet()) {
+                    simulateTurn(this)
+                } else break
+            }
+
+            val winningPlayer = if (player1.healthPoints < player2.healthPoints) player2 else player1
+            return GameResult(winningPlayer)
+        }
+    }
+
+    private fun simulateTurn(gameState: GameState) {
+        val enemyPlayer = gameState.getOpponent(gameState.activePlayer)
+        gameState.activePlayer.getAvailableActions(enemyPlayer).getRandomElement().resolve(gameState)
+    }
+
     fun run() {
         with(gameState) {
             while (!gameEndConditionsMet()) {
@@ -105,7 +125,9 @@ class Game(var gameState: GameState) {
         }
     }
 
-    private fun gameEndConditionsMet() = gameState.player1.healthPoints <= 0 || gameState.player2.healthPoints <= 0
+    private fun gameEndConditionsMet(gameState: GameState = this.gameState): Boolean {
+        return gameState.player1.healthPoints <= 0 || gameState.player2.healthPoints <= 0
+    }
 
     private fun performTurn(currentPlayer: Player) {
         drawCardOrGetPunished(currentPlayer)
@@ -117,20 +139,52 @@ class Game(var gameState: GameState) {
         }
     }
 
-    private fun mctsSearch() {
+    private fun mctsLoop() {
         val currentNode = gameTree.rootNode
         val startTime = System.currentTimeMillis()
 
 
         while (System.currentTimeMillis() < startTime + TURN_TIME_MILLIS) {
 
-            findBestChild(currentNode)
+            val promisinghild = selectPromisingChild(gameTree.rootNode)
 
         }
     }
 
-    private fun findBestChild(currentNode: Node) {
+    private fun selectPromisingChild(parentNode: Node): Node {
+        var promisingChild = parentNode
 
+        while (!gameEndConditionsMet(promisingChild.gameState)) {
+            if (isNodeFullyExpanded(promisingChild)) {
+                promisingChild = findBestChild(promisingChild)
+            } else {
+                return expand(promisingChild)
+            }
+        }
+
+        return promisingChild
+    }
+
+    private fun isNodeFullyExpanded(parentNode: Node): Boolean {
+        parentNode.childNodes.forEach {
+            if (it.gamesPlayed <= 0) {
+                return false
+            }
+        }
+        return true
+    }
+
+    private fun findBestChild(parentNode: Node) = parentNode.childNodes.maxBy {
+        getWinsForActivePlayer(parentNode) / it.gamesPlayed + MAGIC_C * sqrt(2 * ln(parentNode.gamesPlayed.toFloat()) / it.gamesPlayed)
+    }!!
+
+    private fun getWinsForActivePlayer(parentNode: Node) =
+            if (gameTree.rootNode.gameState.activePlayer == gameTree.rootNode.gameState.player1)
+                parentNode.gamesWon.first
+            else parentNode.gamesWon.second
+
+    private fun expand(parentNode: Node): Node {
+        return parentNode
     }
 
     fun drawCardOrGetPunished(currentPlayer: Player) {
@@ -150,7 +204,19 @@ class Game(var gameState: GameState) {
         player.healthPoints += player.turnsWithDeckCardsDepleted * PUNISHMENT_VALUE
         player.turnsWithDeckCardsDepleted--
     }
+
+    private fun Player.useRandomCard() {
+        val drawnCard = handCards.popRandomElement()
+
+        if (drawnCard is AdherentCard) {
+            tableCards.add(drawnCard)
+        } else if (drawnCard is SpellCard) {
+//            drawnCard.applyEffect(activePlayer, getOpponent(activePlayer))
+        } else throw IllegalStateException("The drawn card is neither Adherent nor Spell.")
+    }
 }
+
+class GameResult(val winningPlayer: Player)
 
 fun <E> MutableList<E>.push(element: E) {
     add(element)

@@ -5,6 +5,9 @@ import GameState
 /**
  * Created by r.makowiecki on 28/02/2018.
  */
+typealias Player1Wins = Float
+typealias Player2Wins = Float
+
 class GameTree(initialRootNode: Node) {
     var rootNode: Node = initialRootNode
 }
@@ -14,7 +17,7 @@ open class Node(
         var childNodes: List<Node>,
         val parentNode: Node? = null,
         val gamesPlayed: Int = 0,
-        val gamesWon: Float = 0f
+        val gamesWon: Pair<Player1Wins, Player2Wins> = Pair(0f, 0f)
 ) {
     override fun toString() = "gamestate = ${gameState.player1} childNodes = \n\t\t\t${childNodes}"
 }
@@ -25,5 +28,5 @@ class CardDrawingNode(
         childNodes: List<Node>,
         parentNode: Node? = null,
         gamesPlayed: Int = 0,
-        gamesWon: Float = 0f
+        gamesWon: Pair<Player1Wins, Player2Wins> = Pair(0f, 0f)
 ) : Node(gameState, childNodes, parentNode, gamesPlayed, gamesWon)
