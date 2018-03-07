@@ -4,7 +4,9 @@ import GameState
 import indexOfExact
 import models.AdherentCard
 import models.Card
+import models.MAX_MANA
 import removeExact
+import java.lang.Integer.min
 
 /**
  * Created by r.makowiecki on 24/02/2018.
@@ -37,7 +39,7 @@ class EndTurn : Action() {
 
             manaPointsAtTurnsEnd = activePlayer.mana
             gameState.turnNumber++
-            activePlayer.mana = (gameState.turnNumber - 1) / 2 + 1
+            activePlayer.mana = min(gameState.turnNumber / 2 + 1, MAX_MANA)
             activePlayer = getOpponent(activePlayer)
         }
     }
@@ -49,6 +51,7 @@ class EndTurn : Action() {
             activePlayer = getOpponent(activePlayer)
             activePlayer.mana = manaPointsAtTurnsEnd
             gameState.turnNumber--
+            usedCardsList.clear()
         }
     }
 }
@@ -69,6 +72,7 @@ abstract class SpellCardAction : CardAction() {
         gameState.activePlayer.discardedCount--
         gameState.activePlayer.handCards.add(spellRemovedAtIndex, triggeringCard)
         gameState.activePlayer.mana += triggeringCard.manaCost
+        spellRemovedAtIndex = -1
     }
 }
 
@@ -133,6 +137,8 @@ class FightAnotherAdherent(override val triggeringCard: AdherentCard, val target
         targetCard.currentHealthPoints += triggeringCard.attackStrength
         triggeringCard.currentHealthPoints += targetCard.attackStrength
         triggeringCard.hasBeenUsedInCurrentTurn = false
+        activePlayerKilledAdherent = null
+        enemyPlayerKilledAdherent = null
     }
 }
 
@@ -176,6 +182,7 @@ class HitOne(override val triggeringCard: Card, val targetCard: AdherentCard, va
             }
             targetCard.currentHealthPoints += damage
         }
+        removedAtIndex = -1
         super.rollback(gameState)
     }
 }
@@ -188,14 +195,17 @@ class HitAllEnemies(override val triggeringCard: Card, val damage: Int) : SpellC
     override fun resolve(gameState: GameState) {
         super.resolve(gameState)
         with(gameState) {
-            getOpponent(activePlayer).tableCards.forEach {
-                it.currentHealthPoints -= damage
+            getOpponent(activePlayer).tableCards.forEachIndexed { loopIndex, adherentCard ->
+                adherentCard.currentHealthPoints -= damage
 
-                if (it.currentHealthPoints <= 0) {
-                    removedIndices.add(getOpponent(activePlayer).tableCards.indexOfExact(it))
-                    val killedAdherent = getOpponent(activePlayer).tableCards.removeAt(removedIndices.last())
-                    killedAdherents += killedAdherent
+                if (adherentCard.currentHealthPoints <= 0) {
+                    removedIndices.add(loopIndex)
                 }
+            }
+            removedIndices.forEachIndexed {loopIndex, cardIndex ->
+                val removeAtIndex = cardIndex - loopIndex // positions are moved left after removing each element
+                val killedAdherent = getOpponent(activePlayer).tableCards.removeAt(removeAtIndex)
+                killedAdherents += killedAdherent
             }
         }
     }
@@ -209,6 +219,8 @@ class HitAllEnemies(override val triggeringCard: Card, val damage: Int) : SpellC
                 it.currentHealthPoints += damage
             }
         }
+        removedIndices.clear()
+        killedAdherents.clear()
         super.rollback(gameState)
     }
 }
@@ -226,6 +238,7 @@ class HealOne(override val triggeringCard: Card, val targetCard: AdherentCard, v
     override fun rollback(gameState: GameState) {
         super.rollback(gameState)
         targetCard.currentHealthPoints = targetCard.currentHealthPoints - effectivelyHealedAmount
+        effectivelyHealedAmount = 0
     }
 }
 
@@ -257,6 +270,9 @@ class HealAll(override val triggeringCard: Card, val healAmount: Int) : SpellCar
         allTableCards.forEachIndexed { index, adherentCard ->
             adherentCard.currentHealthPoints -= effectivelyHealedAmounts[index]
         }
+
+        effectivelyHealedAmounts.clear()
+        allTableCards.clear()
     }
 }
 

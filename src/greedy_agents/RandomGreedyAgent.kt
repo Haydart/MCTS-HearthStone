@@ -10,7 +10,7 @@ import java.util.*
  */
 class RandomGreedyAgent : Agent() {
 
-    override fun performTurn(globalGameStateAfterCardDrawing: GameState) {
+    override fun performTurn(globalGameStateAfterCardDrawing: GameState): List<Action> {
         val gameStateToActionsListMap = mutableMapOf<GameState, List<Action>>()
         generateTurnTransitionalStates(globalGameStateAfterCardDrawing, gameStateToActionsListMap)
 
@@ -21,5 +21,6 @@ class RandomGreedyAgent : Agent() {
         println("Moves to perform: $movesToPerform")
 
         movesToPerform.forEach { it.resolve(globalGameStateAfterCardDrawing) }
+        return movesToPerform
     }
 }

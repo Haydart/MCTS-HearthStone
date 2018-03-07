@@ -10,7 +10,7 @@ import pop
  */
 abstract class Agent {
 
-    abstract fun performTurn(globalGameStateAfterCardDrawing: GameState)
+    abstract fun performTurn(globalGameStateAfterCardDrawing: GameState): List<Action>
 
     protected fun generateTurnTransitionalStates(
             currentGameState: GameState,

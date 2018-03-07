@@ -1,6 +1,7 @@
 package mcts_agent
 
 import GameState
+import actions.Action
 import drawCardOrGetPunished
 import gameEndConditionsMet
 import gametree.GameTree
@@ -20,7 +21,7 @@ const val MAGIC_C = 1
 
 class ProbabilisticAgent(private val gameTree: GameTree) : Agent() {
 
-    override fun performTurn(globalGameStateAfterCardDrawing: GameState) {
+    override fun performTurn(globalGameStateAfterCardDrawing: GameState): List<Action> {
         val currentNode = gameTree.rootNode
         val startTime = System.currentTimeMillis()
 
@@ -31,6 +32,8 @@ class ProbabilisticAgent(private val gameTree: GameTree) : Agent() {
         }
 
         gameTree.rootNode = findBestChild(currentNode)
+
+        return emptyList()
     }
 
     private fun selectPromisingChild(parentNode: Node): Node {

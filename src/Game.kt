@@ -2,6 +2,7 @@ import actions.EndTurn
 import gametree.CardDrawingNode
 import gametree.GameTree
 import gametree.Node
+import greedy_agents.Agent
 import greedy_agents.ControllingGreedyAgent
 import greedy_agents.RandomGreedyAgent
 import models.*
@@ -22,11 +23,26 @@ class Game(var gameState: GameState) {
     private val randomAgent = RandomGreedyAgent()
     private val greedyAgent = ControllingGreedyAgent()
 
+    private var player1Controller: Agent? = null
+    private var player2Controller: Agent? = null
+
     init {
         (0 until 3).forEach { gameState.player1.takeCardFromDeck() }
         (0 until 4).forEach { gameState.player2.takeCardFromDeck() }
 
         initialRootNode.childNodes = generateCardDrawPossibleStates(initialRootNode)
+    }
+
+    fun getActivePlayerController(gameState: GameState): Agent? {
+        return if (gameState.activePlayer === gameState.player1) player1Controller else player2Controller
+    }
+
+    fun setPlayerController(player: Player, controller: Agent?) {
+        if (player === gameState.player1) {
+            player1Controller = controller
+        } else {
+            player2Controller = controller
+        }
     }
 
     private fun generateCardDrawPossibleStates(parentNode: Node? = null): List<Node> {
@@ -89,6 +105,9 @@ class Game(var gameState: GameState) {
 
     fun run() {
         with(gameState) {
+            player1Controller = randomAgent
+            player2Controller = greedyAgent
+
             while (!gameEndConditionsMet(gameState)) {
                 performTurn(activePlayer)
 
@@ -105,12 +124,7 @@ class Game(var gameState: GameState) {
 
     private fun performTurn(currentPlayer: Player) {
         drawCardOrGetPunished(currentPlayer)
-
-        if (currentPlayer == gameState.player1) {
-            randomAgent.performTurn(gameState)
-        } else {
-            greedyAgent.performTurn(gameState)
-        }
+        getActivePlayerController(gameState)?.performTurn(gameState)
     }
 
     fun drawCardOrGetPunished(currentPlayer: Player) {

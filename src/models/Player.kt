@@ -15,6 +15,7 @@ import java.util.*
  */
 
 const val MAX_ADHERENT_CARDS_LAID_OUT = 7
+const val MAX_MANA = 10
 
 data class Player(
         val handCards: MutableList<Card>,
