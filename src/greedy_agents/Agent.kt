@@ -8,7 +8,7 @@ import pop
 /**
  * Created by r.makowiecki on 03/03/2018.
  */
-abstract class GreedyAgent {
+abstract class Agent {
 
     abstract fun performTurn(globalGameStateAfterCardDrawing: GameState)
 

@@ -6,12 +6,8 @@ import greedy_agents.ControllingGreedyAgent
 import greedy_agents.RandomGreedyAgent
 import models.*
 import java.util.*
-import kotlin.math.ln
-import kotlin.math.sqrt
 
-const val TURN_TIME_MILLIS = 5000L
 const val PUNISHMENT_VALUE = 2
-const val MAGIC_C = 1
 
 class Game(var gameState: GameState) {
 
@@ -91,28 +87,9 @@ class Game(var gameState: GameState) {
         }
     }
 
-    private fun simulate(node: Node): GameResult {
-        with(node.gameState) {
-            while (!gameEndConditionsMet()) {
-                drawCardOrGetPunished(activePlayer)
-                if (!gameEndConditionsMet()) {
-                    simulateTurn(this)
-                } else break
-            }
-
-            val winningPlayer = if (player1.healthPoints < player2.healthPoints) player2 else player1
-            return GameResult(winningPlayer)
-        }
-    }
-
-    private fun simulateTurn(gameState: GameState) {
-        val enemyPlayer = gameState.getOpponent(gameState.activePlayer)
-        gameState.activePlayer.getAvailableActions(enemyPlayer).getRandomElement().resolve(gameState)
-    }
-
     fun run() {
         with(gameState) {
-            while (!gameEndConditionsMet()) {
+            while (!gameEndConditionsMet(gameState)) {
                 performTurn(activePlayer)
 
                 println("Game state after turn: ")
@@ -126,11 +103,6 @@ class Game(var gameState: GameState) {
         println(gameTree.rootNode)
     }
 
-
-    private fun gameEndConditionsMet(gameState: GameState = this.gameState): Boolean {
-        return gameState.player1.healthPoints <= 0 || gameState.player2.healthPoints <= 0
-    }
-
     private fun performTurn(currentPlayer: Player) {
         drawCardOrGetPunished(currentPlayer)
 
@@ -139,59 +111,6 @@ class Game(var gameState: GameState) {
         } else {
             greedyAgent.performTurn(gameState)
         }
-    }
-
-    private fun mctsLoop() {
-        val currentNode = gameTree.rootNode
-        val startTime = System.currentTimeMillis()
-
-
-        while (System.currentTimeMillis() < startTime + TURN_TIME_MILLIS) {
-
-            val promisingChild = selectPromisingChild(gameTree.rootNode)
-            val simulationResult = simulate(promisingChild)
-            backPropagate(promisingChild, simulationResult)
-        }
-    }
-
-    private fun selectPromisingChild(parentNode: Node): Node {
-        var promisingChild = parentNode
-
-        while (!gameEndConditionsMet(promisingChild.gameState)) {
-            if (isNodeFullyExpanded(promisingChild)) {
-                promisingChild = findBestChild(promisingChild)
-            } else {
-                return expand(promisingChild)
-            }
-        }
-
-        return promisingChild
-    }
-
-    private fun isNodeFullyExpanded(parentNode: Node): Boolean {
-        parentNode.childNodes.forEach {
-            if (it.gamesPlayed <= 0) {
-                return false
-            }
-        }
-        return true
-    }
-
-    private fun findBestChild(parentNode: Node) = parentNode.childNodes.maxBy {
-        getWinsForActivePlayer(parentNode) / it.gamesPlayed + MAGIC_C * sqrt(2 * ln(parentNode.gamesPlayed.toFloat()) / it.gamesPlayed)
-    }!!
-
-    private fun getWinsForActivePlayer(parentNode: Node) =
-            if (gameTree.rootNode.gameState.activePlayer == gameTree.rootNode.gameState.player1)
-                parentNode.gamesWon.first
-            else parentNode.gamesWon.second
-
-    private fun expand(parentNode: Node): Node {
-        return parentNode
-    }
-
-    private fun backPropagate(finalNode: Node, gameResult: GameResult) {
-        finalNode.updateGamesWon(gameResult.winningPlayer == finalNode.gameState.player1)
     }
 
     fun drawCardOrGetPunished(currentPlayer: Player) {
@@ -223,8 +142,6 @@ class Game(var gameState: GameState) {
     }
 }
 
-class GameResult(val winningPlayer: Player)
-
 fun <E> MutableList<E>.push(element: E) {
     add(element)
 }
@@ -252,3 +169,19 @@ fun <E> MutableList<E>.containsExact(element: E): Boolean {
         it === element
     }
 }
+
+fun drawCardOrGetPunished(currentPlayer: Player) {
+    if (currentPlayer.deckCards.size > 0) {
+        currentPlayer.takeCardFromDeck()
+    } else {
+        punishPlayerWithEmptyDeck(currentPlayer)
+    }
+}
+
+private fun punishPlayerWithEmptyDeck(player: Player) {
+    player.turnsWithDeckCardsDepleted++
+    player.healthPoints -= player.turnsWithDeckCardsDepleted * PUNISHMENT_VALUE
+}
+
+fun gameEndConditionsMet(gameState: GameState) =
+        gameState.player1.healthPoints <= 0 || gameState.player2.healthPoints <= 0

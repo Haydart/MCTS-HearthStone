@@ -14,7 +14,7 @@ private const val ATTACK_SUM_WEIGHT = 2
 private const val HAND_SIZE_WEIGHT = 1
 private const val ADHERENT_HP_SUM_WEIGHT = 1
 
-class AggressiveGreedyAgent : GreedyAgent() {
+class AggressiveGreedyAgent : Agent() {
 
     override fun performTurn(globalGameStateAfterCardDrawing: GameState) {
         val gameStateActionsListMap = mutableMapOf<GameState, List<Action>>()
