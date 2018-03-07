@@ -123,7 +123,9 @@ class Game(var gameState: GameState) {
             val winningPlayer = if (player1.healthPoints < player2.healthPoints) player2 else player1
             println("Game end, the winning player is \n$winningPlayer")
         }
+        println(gameTree.rootNode)
     }
+
 
     private fun gameEndConditionsMet(gameState: GameState = this.gameState): Boolean {
         return gameState.player1.healthPoints <= 0 || gameState.player2.healthPoints <= 0
@@ -146,8 +148,9 @@ class Game(var gameState: GameState) {
 
         while (System.currentTimeMillis() < startTime + TURN_TIME_MILLIS) {
 
-            val promisinghild = selectPromisingChild(gameTree.rootNode)
-
+            val promisingChild = selectPromisingChild(gameTree.rootNode)
+            val simulationResult = simulate(promisingChild)
+            backPropagate(promisingChild, simulationResult)
         }
     }
 
@@ -185,6 +188,10 @@ class Game(var gameState: GameState) {
 
     private fun expand(parentNode: Node): Node {
         return parentNode
+    }
+
+    private fun backPropagate(finalNode: Node, gameResult: GameResult) {
+        finalNode.updateGamesWon(gameResult.winningPlayer == finalNode.gameState.player1)
     }
 
     fun drawCardOrGetPunished(currentPlayer: Player) {
