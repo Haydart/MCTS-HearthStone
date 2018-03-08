@@ -31,7 +31,7 @@ open class Node(
         parentNode?.updateGamesWon(player1Won)
     }
 
-    override fun toString() = "gamestate = ${gameState.player1} childNodes = \n\t\t\t${childNodes}"
+    override fun toString() = "Played/Won = ${gamesPlayed}/${gamesWon}, gamestate = ${gameState.player1} childNodes = \n\t\t\t${childNodes}"
 }
 
 class CardDrawingNode(
