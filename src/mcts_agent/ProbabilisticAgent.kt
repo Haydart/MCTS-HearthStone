@@ -61,9 +61,6 @@ class ProbabilisticAgent(private val gameTree: GameTree) : Agent() {
     }
 
     private fun findBestChild(parentNode: Node): Node {
-        if (parentNode.childNodes.isEmpty()) {
-            parentNode.childNodes = generateCardDrawPossibleStates(parentNode, parentNode.gameState)
-        }
         return parentNode.childNodes.maxBy {
             getWinsForActivePlayer(parentNode) / it.gamesPlayed + MAGIC_C * sqrt(2 * ln(parentNode.gamesPlayed.toFloat()) / it.gamesPlayed)
         }!!
@@ -75,7 +72,14 @@ class ProbabilisticAgent(private val gameTree: GameTree) : Agent() {
             else parentNode.gamesWon.second
 
     private fun expand(parentNode: Node): Node {
-        return parentNode
+        if (parentNode.childNodes.isEmpty()) {
+            parentNode.childNodes = generateCardDrawPossibleStates(parentNode, parentNode.gameState)
+        }
+        val randomUntriedNode = parentNode.childNodes.filter {
+            it.gamesPlayed <= 0
+        }.getRandomElement()
+
+        return randomUntriedNode
     }
 
     private fun backPropagate(finalNode: Node, gameResult: GameResult) {
