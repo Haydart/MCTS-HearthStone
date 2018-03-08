@@ -2,6 +2,7 @@ package mcts_agent
 
 import GameState
 import actions.Action
+import actions.EndTurn
 import drawCardOrGetPunished
 import gameEndConditionsMet
 import gametree.GameTree
@@ -103,7 +104,17 @@ class ProbabilisticAgent(private val gameTree: GameTree) : Agent() {
 
     private fun simulateTurn(gameState: GameState) {
         val enemyPlayer = gameState.getOpponent(gameState.activePlayer)
-        gameState.activePlayer.getAvailableActions(enemyPlayer).getRandomElement().resolve(gameState)
+
+        var playerEndedTurn = false
+
+        while (!playerEndedTurn) {
+            val randomAction = gameState.activePlayer.getAvailableActions(enemyPlayer).getRandomElement()
+            randomAction.resolve(gameState)
+
+            if (randomAction is EndTurn) {
+                playerEndedTurn = true
+            }
+        }
     }
 }
 
