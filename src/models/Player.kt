@@ -50,7 +50,7 @@ data class Player(
 
     private fun cardWasNotUsedInCurrentTurn(action: CardAction) = action.triggeringCard !is AdherentCard || !(action.triggeringCard as AdherentCard).hasBeenUsedInCurrentTurn
 
-    fun takeCardFromDeck() = handCards.add(deckCards.takeRandomElement())
+    fun takeCardFromDeck() = handCards.add(deckCards.popRandomElement())
 
     fun takeCardFromDeck(card: Card): Int {
         val cardIndex = deckCards.indexOfExact(card)
@@ -98,4 +98,6 @@ data class Player(
             "discardedCards($discardedCount), HP($healthPoints), mana($mana)"
 }
 
-fun <E> MutableList<E>.takeRandomElement() = this.removeAt(Random().nextInt(this.size))
+fun <E> MutableList<E>.popRandomElement() = removeAt(Random().nextInt(size))
+
+fun <E> List<E>.getRandomElement() = get(Random().nextInt(size))
