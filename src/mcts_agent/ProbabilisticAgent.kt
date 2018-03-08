@@ -52,6 +52,10 @@ class ProbabilisticAgent(private val gameTree: GameTree) : Agent() {
     }
 
     private fun isNodeFullyExpanded(parentNode: Node): Boolean {
+        if (parentNode.childNodes.isEmpty()) {
+            parentNode.childNodes = generateCardDrawPossibleStates(parentNode, parentNode.gameState)
+        }
+
         parentNode.childNodes.forEach {
             if (it.gamesPlayed <= 0) {
                 return false
@@ -72,9 +76,6 @@ class ProbabilisticAgent(private val gameTree: GameTree) : Agent() {
             else parentNode.gamesWon.second
 
     private fun expand(parentNode: Node): Node {
-        if (parentNode.childNodes.isEmpty()) {
-            parentNode.childNodes = generateCardDrawPossibleStates(parentNode, parentNode.gameState)
-        }
         val randomUntriedNode = parentNode.childNodes.filter {
             it.gamesPlayed <= 0
         }.getRandomElement()
