@@ -82,11 +82,14 @@ class PlaceAdherentCard(override val triggeringCard: AdherentCard) : AdherentCar
         if (triggeringCard !is AdherentCard) throw IllegalAccessException("PlaceAdherentCard can only be the action of an adherent card.")
     }
 
+    var removedAtIndex = -1
+
     override fun resolve(gameState: GameState) {
         with(gameState.activePlayer) {
             mana -= triggeringCard.manaCost
             tableCards.add(triggeringCard)
-            handCards.removeExact(triggeringCard)
+            removedAtIndex = handCards.indexOfExact(triggeringCard)
+            handCards.removeAt(removedAtIndex)
             triggeringCard.hasBeenUsedInCurrentTurn = true
         }
     }
@@ -95,7 +98,8 @@ class PlaceAdherentCard(override val triggeringCard: AdherentCard) : AdherentCar
         with(gameState.activePlayer) {
             mana += triggeringCard.manaCost
             tableCards.removeExact(triggeringCard)
-            handCards.add(triggeringCard)
+            handCards.add(removedAtIndex, triggeringCard)
+            removedAtIndex = -1
             triggeringCard.hasBeenUsedInCurrentTurn = false
         }
     }
