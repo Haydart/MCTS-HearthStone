@@ -12,15 +12,10 @@ const val PUNISHMENT_VALUE = 2
 
 class Game(gameState: GameState) {
 
-    private val initialRootNode = Node(
-            gameState,
-            listOf(),
-            null
-    )
+    private val gameTree = GameTree(Node(gameState, listOf(), null))
 
-    private val gameTree = GameTree(initialRootNode)
-
-    private val randomAgent = RandomGreedyAgent()
+    //private val randomAgent = RandomGreedyAgent()
+    private val randomAgent = ProbabilisticAgent(gameTree)
     private val greedyAgent = ProbabilisticAgent(gameTree)
 
     private var player1Controller: Agent? = null
@@ -30,7 +25,7 @@ class Game(gameState: GameState) {
         (0 until 3).forEach { gameState.player1.takeCardFromDeck() }
         (0 until 4).forEach { gameState.player2.takeCardFromDeck() }
 
-        initialRootNode.childNodes = generateCardDrawPossibleStates(initialRootNode, gameState)
+        gameTree.rootNode.childNodes = generateCardDrawPossibleStates(gameTree.rootNode, gameState)
     }
 
     fun getActivePlayerController(gameState: GameState): Agent? {
@@ -45,28 +40,85 @@ class Game(gameState: GameState) {
         }
     }
 
+    fun getCurrentState(): GameState = gameTree.rootNode.gameState
+
     fun run() {
-        with(gameTree.rootNode.gameState) {
-            player1Controller = randomAgent
-            player2Controller = greedyAgent
+        player1Controller = randomAgent
+        player2Controller = greedyAgent
 
-            while (!gameEndConditionsMet(this)) {
-                performTurn(activePlayer)
+        //val initialTreeRoot = gameTree.rootNode
 
-                println("Game state after ${activePlayer.name} turn: ")
-                println(this)
-                println("______________________________")
-            }
+        while (!gameEndConditionsMet(getCurrentState())) {
+            println("Turn of ${getCurrentState().activePlayer.name}")
+            println("Game state before ${getCurrentState().activePlayer.name} turn: ")
+            println(getCurrentState())
+            println("...")
+            println("Game state after ${getCurrentState().activePlayer.name} turn: ")
+            performTurn(getCurrentState().activePlayer)
+            println(getCurrentState())
 
-            val winningPlayer = if (player1.healthPoints < player2.healthPoints) player2 else player1
-            println("Game end, the winning player is \n$winningPlayer")
+            //println(initialTreeRoot.printTree(0))
+
+            println("______________________________")
         }
-        println(this)
+
+        val winningPlayer = if (getCurrentState().player1.healthPoints < getCurrentState().player2.healthPoints) getCurrentState().player2 else getCurrentState().player1
+        println("Game end, the winning player is \n$winningPlayer")
+
+        println(getCurrentState())
     }
 
     private fun performTurn(currentPlayer: Player) {
+
+        if (getActivePlayerController(getCurrentState()) is ProbabilisticAgent) {
+            if (gameTree.rootNode.childNodes.size <= 0) {
+                println("!!! Force tree generation !!!")
+                gameTree.rootNode.childNodes = generateCardDrawPossibleStates(gameTree.rootNode, getCurrentState())
+            }
+        }
+
         drawCardOrGetPunished(currentPlayer)
-        getActivePlayerController(gameTree.rootNode.gameState)?.performTurn(gameTree.rootNode.gameState)
+        println(gameTree.rootNode.getNodeInfo())
+
+        // resolve tree
+        val newRootNode: Node? = gameTree.rootNode.childNodes.find {
+            val hC1 = it.gameState.activePlayer.deckCards.sumBy {
+                it.hashCode()
+            }
+            val hC2 = gameTree.rootNode.gameState.activePlayer.deckCards.sumBy {
+                it.hashCode()
+            }
+            hC1 == hC2
+        }
+
+        if (newRootNode != null) {
+            println("!!! New root node found after draw !!!")
+            gameTree.updateRoot(newRootNode)
+            println(gameTree.rootNode.getNodeInfo())
+        } else {
+            println("!!! Not found new node after draw !!!")
+        }
+
+        //println(gameTree.rootNode.getNodeInfo())
+
+        val notMCTS: Boolean = (getActivePlayerController(getCurrentState()) !is ProbabilisticAgent)
+
+        getActivePlayerController(getCurrentState())?.performTurn(getCurrentState())
+
+        if (notMCTS) {
+            // resolve tree
+            val newRootNode: Node? = gameTree.rootNode.childNodes.find {
+                it.gameState == gameTree.rootNode.gameState
+            }
+
+            if (newRootNode != null) {
+                println("!!! New root node found after turn !!!")
+                gameTree.updateRoot(newRootNode)
+            } else {
+                println("!!! Not found new node after turn !!!")
+            }
+        }
+        println(gameTree.rootNode.getNodeInfo())
     }
 
     fun drawCardOrGetPunished(currentPlayer: Player) {

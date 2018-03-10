@@ -33,7 +33,12 @@ class ProbabilisticAgent(private val gameTree: GameTree) : Agent() {
             backPropagate(promisingChild, simulationResult)
         }
 
-        gameTree.rootNode = findBestChild(currentNode)
+        println("Childs:")
+        gameTree.rootNode.childNodes.forEach {
+            println(it.getNodeInfo())
+        }
+
+        gameTree.updateRoot(findBestChild(currentNode))
 
         return emptyList()
     }
@@ -85,7 +90,8 @@ class ProbabilisticAgent(private val gameTree: GameTree) : Agent() {
     }
 
     private fun backPropagate(finalNode: Node, gameResult: GameResult) {
-        finalNode.updateGamesWon(gameResult.winningPlayer == finalNode.gameState.player1)
+        val player1Won = gameResult.player1Won
+        finalNode.updateGamesWon(player1Won)
     }
 
     private fun simulate(node: Node): GameResult {
@@ -97,8 +103,7 @@ class ProbabilisticAgent(private val gameTree: GameTree) : Agent() {
                 } else break
             }
 
-            val winningPlayer = if (player1.healthPoints < player2.healthPoints) player2 else player1
-            return GameResult(winningPlayer)
+            return GameResult(player1.healthPoints > player2.healthPoints)
         }
     }
 
@@ -118,4 +123,4 @@ class ProbabilisticAgent(private val gameTree: GameTree) : Agent() {
     }
 }
 
-class GameResult(val winningPlayer: Player)
+class GameResult(val player1Won: Boolean)
