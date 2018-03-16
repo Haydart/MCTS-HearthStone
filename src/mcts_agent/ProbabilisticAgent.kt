@@ -33,12 +33,16 @@ class ProbabilisticAgent(private val gameTree: GameTree) : Agent() {
             println(it)
         }
 
+        val playoutsSoFar = gameTree.rootNode.gamesPlayed
+        println("Playouts so far: $playoutsSoFar")
         while (System.currentTimeMillis() < startTime + TURN_TIME_MILLIS) {
             val promisingChild = selectPromisingChild(gameTree.rootNode)
             val simulationResult = simulate(promisingChild)
             backPropagate(promisingChild, simulationResult)
         }
 
+        val playoutsAfterTurn = gameTree.rootNode.gamesPlayed
+        println("Playouts after this turn: $playoutsAfterTurn (delta = ${playoutsAfterTurn - playoutsSoFar})")
         println("Childs:")
         gameTree.rootNode.childNodes.forEach {
             println(it.getNodeInfo())
