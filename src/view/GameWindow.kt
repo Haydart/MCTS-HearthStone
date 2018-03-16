@@ -21,6 +21,7 @@ import javafx.scene.layout.VBox
 import javafx.scene.shape.Circle
 import javafx.scene.text.Text
 import javafx.stage.Stage
+import mcts_agent.ProbabilisticAgent
 import models.Card
 import models.Player
 import pop
@@ -108,16 +109,31 @@ class GameWindow: Application() {
         option4.isSelected = false
         agentSelectionBox.children.add(option4)
 
+        val option5 = RadioButton(ProbabilisticAgent::class.simpleName)
+        option5.toggleGroup = toggleGroup
+        option5.isSelected = false
+        agentSelectionBox.children.add(option5)
+
         toggleGroup.selectedToggleProperty().addListener { _, _, new_toggle ->
             if (toggleGroup.selectedToggle != null) {
                 gGameInstance?.let {
                     val controllerClassName = (new_toggle as RadioButton).text
 
                     var newController: Agent? = null
-                    if (controllerClassName != "Player"){
-                        val kClass = Class.forName("greedy_agents." + controllerClassName).kotlin
-                        println(kClass)
-                        newController = (kClass.createInstance() as Agent)
+                    when (controllerClassName) {
+                        "Player" -> {
+                            // do nothing
+                        }
+                        ProbabilisticAgent::class.simpleName -> {
+                            val kClass = Class.forName("mcts_agent." + controllerClassName).kotlin
+                            println(kClass)
+                            newController = (kClass.createInstance() as Agent)
+                        }
+                        else -> {
+                            val kClass = Class.forName("greedy_agents." + controllerClassName).kotlin
+                            println(kClass)
+                            newController = (kClass.createInstance() as Agent)
+                        }
                     }
 
                     it.setPlayerController(playerVis.player, newController)
