@@ -9,7 +9,6 @@ import gametree.GameTree
 import gametree.Node
 import generateCardDrawPossibleStates
 import greedy_agents.Agent
-import models.Player
 import models.getRandomElement
 import kotlin.math.ln
 import kotlin.math.sqrt
@@ -18,8 +17,8 @@ import kotlin.math.sqrt
  * Created by r.makowiecki on 07/03/2018.
  */
 
-const val TURN_TIME_MILLIS = 3000L
-const val MAGIC_C = 1f
+const val TURN_TIME_MILLIS = 7500L
+const val MAGIC_C = 0.5f
 
 class ProbabilisticAgent(private val gameTree: GameTree) : Agent() {
 

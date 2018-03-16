@@ -3,7 +3,7 @@ import gametree.CardDrawingNode
 import gametree.GameTree
 import gametree.Node
 import greedy_agents.Agent
-import greedy_agents.RandomGreedyAgent
+import greedy_agents.ControllingGreedyAgent
 import mcts_agent.ProbabilisticAgent
 import models.*
 import java.util.*
@@ -15,8 +15,7 @@ class Game(gameState: GameState) {
 
     private val gameTree = GameTree(Node(gameState, listOf(), null))
 
-    //private val randomAgent = RandomGreedyAgent()
-    private val randomAgent = RandomGreedyAgent()
+    private val randomAgent = ControllingGreedyAgent()
     private val greedyAgent = ProbabilisticAgent(gameTree)
 
     private var player1Controller: Agent? = null
