@@ -19,13 +19,19 @@ import kotlin.math.sqrt
  */
 
 const val TURN_TIME_MILLIS = 3000L
-const val MAGIC_C = 1
+const val MAGIC_C = 1f
 
 class ProbabilisticAgent(private val gameTree: GameTree) : Agent() {
 
     override fun performTurn(globalGameStateAfterCardDrawing: GameState): List<Action> {
         val currentNode = gameTree.rootNode
         val startTime = System.currentTimeMillis()
+
+        val state = currentNode.gameState;
+        val avActions = state.activePlayer.getAvailableActions(state.getOpponent(state.activePlayer))
+        avActions.forEach {
+            println(it)
+        }
 
         while (System.currentTimeMillis() < startTime + TURN_TIME_MILLIS) {
             val promisingChild = selectPromisingChild(gameTree.rootNode)
@@ -38,7 +44,10 @@ class ProbabilisticAgent(private val gameTree: GameTree) : Agent() {
             println(it.getNodeInfo())
         }
 
-        gameTree.updateRoot(findBestChild(currentNode))
+        val bestChildren = findBestChild(currentNode, 0f)
+        println("BestChildren:")
+        println(bestChildren.getNodeInfo())
+        gameTree.updateRoot(bestChildren)
 
         return emptyList()
     }
@@ -48,7 +57,7 @@ class ProbabilisticAgent(private val gameTree: GameTree) : Agent() {
 
         while (!gameEndConditionsMet(promisingChild.gameState)) {
             if (isNodeFullyExpanded(promisingChild)) {
-                promisingChild = findBestChild(promisingChild)
+                promisingChild = findBestChild(promisingChild, MAGIC_C)
             } else {
                 return expand(promisingChild)
             }
@@ -70,9 +79,9 @@ class ProbabilisticAgent(private val gameTree: GameTree) : Agent() {
         return true
     }
 
-    private fun findBestChild(parentNode: Node): Node {
+    private fun findBestChild(parentNode: Node, c_param: Float): Node {
         return parentNode.childNodes.maxBy {
-            getWinsForActivePlayer(parentNode) / it.gamesPlayed + MAGIC_C * sqrt(2 * ln(parentNode.gamesPlayed.toFloat()) / it.gamesPlayed)
+            getWinsForActivePlayer(it) / it.gamesPlayed + c_param * sqrt(2 * ln(parentNode.gamesPlayed.toFloat()) / it.gamesPlayed)
         }!!
     }
 
