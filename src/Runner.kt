@@ -7,7 +7,7 @@ import models.Card
 import models.Player
 import models.SpellCard
 
-//import view.GameWindow
+import view.GameWindow
 
 /**
  * Created by r.makowiecki on 23/02/2018.
@@ -51,8 +51,8 @@ fun main(args: Array<String>) {
             gameInstance.run()
         }
         GameMode.GUI -> {
-//            val gameWindow = GameWindow()
-//            gameWindow.launchWindow(args)
+            val gameWindow = GameWindow()
+            gameWindow.launchWindow(args)
         }
     }
 }
