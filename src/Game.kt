@@ -7,6 +7,7 @@ import greedy_agents.RandomGreedyAgent
 import mcts_agent.ProbabilisticAgent
 import models.*
 import java.util.*
+import kotlin.collections.HashSet
 
 const val PUNISHMENT_VALUE = 2
 
@@ -15,7 +16,7 @@ class Game(gameState: GameState) {
     private val gameTree = GameTree(Node(gameState, listOf(), null))
 
     //private val randomAgent = RandomGreedyAgent()
-    private val randomAgent = ProbabilisticAgent(gameTree)
+    private val randomAgent = RandomGreedyAgent()
     private val greedyAgent = ProbabilisticAgent(gameTree)
 
     private var player1Controller: Agent? = null
@@ -230,23 +231,26 @@ fun generateCardDrawPossibleStates(parentNode: Node? = null, gameState: GameStat
 }
 
 private fun generatePossibleEndTurnGameStates(parentNode: Node? = null, stateAfterCardDraw: GameState): MutableList<Node> {
-    val endStatesList = LinkedList<GameState>()
-    generateTurnTransitionalStates(endStatesList, stateAfterCardDraw)
-    return endStatesList.map {
+    val endStatesSet = HashSet<GameState>()
+    generateTurnTransitionalStates(endStatesSet, stateAfterCardDraw)
+
+    return endStatesSet.map {
         Node(it, LinkedList(), parentNode)
     }.toMutableList()
 }
 
-private fun generateTurnTransitionalStates(leafStatesList: MutableList<GameState>, currentGameState: GameState) {
+private fun generateTurnTransitionalStates(leafStatesSet: MutableSet<GameState>, currentGameState: GameState) {
     with(currentGameState) {
         activePlayer.getAvailableActions(getOpponent(activePlayer)).forEach {
             if (it is EndTurn) {
                 it.resolve(currentGameState)
-                leafStatesList.add(currentGameState.deepCopy())
+                if (!leafStatesSet.contains(currentGameState)){
+                    leafStatesSet.add(currentGameState.deepCopy())
+                }
                 it.rollback(currentGameState)
             } else {
                 it.resolve(currentGameState)
-                generateTurnTransitionalStates(leafStatesList, currentGameState)
+                generateTurnTransitionalStates(leafStatesSet, currentGameState)
                 it.rollback(currentGameState)
             }
         }

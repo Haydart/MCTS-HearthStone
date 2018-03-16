@@ -43,10 +43,10 @@ class ProbabilisticAgent(private val gameTree: GameTree) : Agent() {
 
         val playoutsAfterTurn = gameTree.rootNode.gamesPlayed
         println("Playouts after this turn: $playoutsAfterTurn (delta = ${playoutsAfterTurn - playoutsSoFar})")
-        println("Childs:")
-        gameTree.rootNode.childNodes.forEach {
-            println(it.getNodeInfo())
-        }
+//        println("Childs:")
+//        gameTree.rootNode.childNodes.forEach {
+//            println(it.getNodeInfo())
+//        }
 
         val bestChildren = findBestChild(currentNode, 0f)
         println("BestChildren:")
