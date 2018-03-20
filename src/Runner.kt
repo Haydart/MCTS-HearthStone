@@ -50,10 +50,33 @@ fun main(args: Array<String>) {
     val gameInstance = Game(GameState(player1, player2, turnNumber = 1, activePlayer = player1))
     gGameInstance = gameInstance
 
-    val gameMode = GameMode.MCTS_QUALITY_TEST
+    val gameMode = GameMode.TEXT
     when (gameMode) {
         GameMode.TEXT -> {
-            gameInstance.run()
+            (0..25).forEach {
+                val simPlayer1 = Player(
+                        mutableListOf(),
+                        createInitialDeck(),
+                        mutableListOf(),
+                        healthPoints = 20,
+                        name = "player1",
+                        turnsWithDeckCardsDepleted = 0,
+                        discardedCount = 0
+                )
+
+                val simPlayer2 = Player(
+                        mutableListOf(),
+                        createInitialDeck(),
+                        mutableListOf(),
+                        healthPoints = 20,
+                        name = "player2",
+                        turnsWithDeckCardsDepleted = 0,
+                        discardedCount = 0
+                )
+
+                val game = Game(GameState(simPlayer1, simPlayer2, turnNumber = 1, activePlayer = simPlayer1))
+                game.run()
+            }
         }
         GameMode.GUI -> {
             val gameWindow = GameWindow()
@@ -63,13 +86,15 @@ fun main(args: Array<String>) {
             gameInstance.runMCTSPerformanceTest()
         }
         GameMode.MCTS_QUALITY_TEST -> {
+//            (0..25).forEach {
+//                val startTime = System.currentTimeMillis()
+//                MctsTestGame(GameState(player1, player2, turnNumber = 1, activePlayer = player1), RandomGreedyAgent(), false).run()
+//                print("Game took ${(System.currentTimeMillis() - startTime) / 1000} seconds")
+//            }
             (0..25).forEach {
                 val startTime = System.currentTimeMillis()
-                MctsTestGame(GameState(player1, player2, turnNumber = 1, activePlayer = player1), RandomGreedyAgent(), false).run()
-                print("Game took ${(System.currentTimeMillis() - startTime) / 1000} seconds")
-            }
-            (0..25).forEach {
                 MctsTestGame(GameState(player1, player2, turnNumber = 1, activePlayer = player1), RandomGreedyAgent(), true).run()
+                print("Game took ${(System.currentTimeMillis() - startTime) / 1000} seconds")
             }
             (0..25).forEach {
                 MctsTestGame(GameState(player1, player2, turnNumber = 1, activePlayer = player1), ControllingGreedyAgent(), false).run()

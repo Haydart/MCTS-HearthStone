@@ -37,6 +37,7 @@ class MctsTestGame(gameState: GameState, enemyAgent: Agent, private val mctsFirs
 
         while (!gameEndConditionsMet(getCurrentState())) {
             performTurn(getCurrentState().activePlayer)
+            println(getCurrentState())
             print(".")
         }
 

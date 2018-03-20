@@ -28,12 +28,12 @@ class ProbabilisticAgent(private val gameTree: GameTree) : Agent() {
 
         val state = currentNode.gameState
         val availableActions = state.activePlayer.getAvailableActions(state.getOpponent(state.activePlayer))
-//        availableActions.forEach {
-//            println(it)
-//        }
+        availableActions.forEach {
+            println(it)
+        }
 
         val playoutsSoFar = gameTree.rootNode.gamesPlayed
-//        println("Playouts so far: $playoutsSoFar")
+        println("Playouts so far: $playoutsSoFar")
         while (System.currentTimeMillis() < startTime + TURN_TIME_MILLIS) {
             val promisingChild = selectPromisingChild(gameTree.rootNode)
             val simulationResult = simulate(promisingChild)
@@ -41,7 +41,7 @@ class ProbabilisticAgent(private val gameTree: GameTree) : Agent() {
         }
 
         val playoutsAfterTurn = gameTree.rootNode.gamesPlayed
-//        println("Playouts after this turn: $playoutsAfterTurn (delta = ${playoutsAfterTurn - playoutsSoFar})")
+        println("Playouts after this turn: $playoutsAfterTurn (delta = ${playoutsAfterTurn - playoutsSoFar})")
 //        println("Childs:")
 //        gameTree.rootNode.childNodes.forEach {
 //            println(it.getNodeInfo())
