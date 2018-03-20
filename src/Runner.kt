@@ -18,7 +18,8 @@ var gGameInstance: Game? = null
 enum class GameMode {
     TEXT,
     GUI,
-    TEST_PERF
+    PERFORMANCE_TEST,
+    MCTS_QUALITY_TEST
 }
 
 fun main(args: Array<String>) {
@@ -38,7 +39,7 @@ fun main(args: Array<String>) {
             createInitialDeck(),
             mutableListOf(),
             healthPoints = 20,
-            name = "Controlling agent",
+            name = "MCTS agent",
             turnsWithDeckCardsDepleted = 0,
             discardedCount = 0
     )
@@ -46,7 +47,7 @@ fun main(args: Array<String>) {
     val gameInstance = Game(GameState(player1, player2, turnNumber = 1, activePlayer = player1))
     gGameInstance = gameInstance
 
-    val gameMode = GameMode.GUI
+    val gameMode = GameMode.MCTS_QUALITY_TEST
     when (gameMode) {
         GameMode.TEXT -> {
             gameInstance.run()
@@ -55,8 +56,13 @@ fun main(args: Array<String>) {
             val gameWindow = GameWindow()
             gameWindow.launchWindow(args)
         }
-        GameMode.TEST_PERF -> {
+        GameMode.PERFORMANCE_TEST -> {
             gameInstance.runMCTSPerformanceTest()
+        }
+        GameMode.MCTS_QUALITY_TEST -> {
+            (0..1).forEach {
+                TestGame(GameState(player1, player2, turnNumber = 1, activePlayer = player1)).run()
+            }
         }
     }
 }

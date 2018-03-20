@@ -1,17 +1,17 @@
-import actions.EndTurn
 import gametree.CardDrawingNode
 import gametree.GameTree
 import gametree.Node
 import greedy_agents.Agent
 import greedy_agents.ControllingGreedyAgent
 import mcts_agent.ProbabilisticAgent
-import models.*
-import java.util.*
-import kotlin.collections.HashSet
+import models.AdherentCard
+import models.Player
+import models.SpellCard
+import models.popRandomElement
 
 private const val PUNISHMENT_VALUE = 2
 
-class Game(gameState: GameState) {
+class TestGame(gameState: GameState) {
 
     private val gameTree = GameTree(Node(gameState, listOf(), null))
 
@@ -136,18 +136,9 @@ class Game(gameState: GameState) {
         player1Controller = randomAgent
         player2Controller = greedyAgent
 
-        //val initialTreeRoot = gameTree.rootNode
-
         while (!gameEndConditionsMet(getCurrentState())) {
-            println("Turn of ${getCurrentState().activePlayer.name}")
-            println("Game state before ${getCurrentState().activePlayer.name} turn: ")
-            println(getCurrentState())
-            println("...")
-            println("Game state after ${getCurrentState().activePlayer.name} turn: ")
             performTurn(getCurrentState().activePlayer)
             println(getCurrentState())
-
-            //println(initialTreeRoot.printTree(0))
 
             println("______________________________")
         }
@@ -159,10 +150,8 @@ class Game(gameState: GameState) {
     }
 
     private fun performTurn(currentPlayer: Player) {
-
         if (getActivePlayerController(getCurrentState()) is ProbabilisticAgent) {
             if (gameTree.rootNode.childNodes.size <= 0) {
-                println("!!! Force tree generation !!!")
                 gameTree.rootNode.childNodes = generateCardDrawPossibleStates(gameTree.rootNode, getCurrentState())
             }
         }
@@ -182,36 +171,25 @@ class Game(gameState: GameState) {
         }
 
         if (newRootNode != null) {
-            println("!!! New root node found after draw !!!")
             gameTree.updateRoot(newRootNode)
-            println(gameTree.rootNode.getNodeInfo())
-        } else {
-            println("!!! Not found new node after draw !!!")
         }
-
-        //println(gameTree.rootNode.getNodeInfo())
 
         val notMCTS: Boolean = (getActivePlayerController(getCurrentState()) !is ProbabilisticAgent)
 
         getActivePlayerController(getCurrentState())?.performTurn(getCurrentState())
 
         if (notMCTS) {
-            // resolve tree
             val newRootNode: Node? = gameTree.rootNode.childNodes.find {
                 it.gameState == gameTree.rootNode.gameState
             }
 
             if (newRootNode != null) {
-                println("!!! New root node found after turn !!!")
                 gameTree.updateRoot(newRootNode)
-            } else {
-                println("!!! Not found new node after turn !!!")
             }
         }
-        println(gameTree.rootNode.getNodeInfo())
     }
 
-    fun drawCardOrGetPunished(currentPlayer: Player) {
+    private fun drawCardOrGetPunished(currentPlayer: Player) {
         if (currentPlayer.deckCards.size > 0) {
             currentPlayer.takeCardFromDeck()
         } else {
@@ -240,108 +218,7 @@ class Game(gameState: GameState) {
     }
 }
 
-fun <E> MutableList<E>.push(element: E) {
-    add(element)
-}
-
-fun <E> MutableList<E>.pop(): E {
-    val lastItem = last()
-    remove(lastItem)
-    return lastItem
-}
-
-fun <E> MutableList<E>.removeExact(element: E): Boolean {
-    return removeIf {
-        it === element
-    }
-}
-
-fun <E> MutableList<E>.indexOfExact(element: E): Int {
-    return indexOfFirst {
-        it === element
-    }
-}
-
-fun <E> MutableList<E>.containsExact(element: E): Boolean {
-    return any {
-        it === element
-    }
-}
-
-fun drawCardOrGetPunished(currentPlayer: Player) {
-    if (currentPlayer.deckCards.size > 0) {
-        currentPlayer.takeCardFromDeck()
-    } else {
-        punishPlayerWithEmptyDeck(currentPlayer)
-    }
-}
-
 private fun punishPlayerWithEmptyDeck(player: Player) {
     player.turnsWithDeckCardsDepleted++
     player.healthPoints -= player.turnsWithDeckCardsDepleted * PUNISHMENT_VALUE
-}
-
-fun gameEndConditionsMet(gameState: GameState) =
-        gameState.player1.healthPoints <= 0 || gameState.player2.healthPoints <= 0
-
-
-fun generateCardDrawPossibleStates(parentNode: Node? = null, gameState: GameState): List<Node> {
-    val possibleEndStateNodes = mutableListOf<Node>()
-    val cardToDrawProbability = mutableMapOf<Card, Float>()
-
-    gameState.activePlayer.deckCards.forEach {
-        val cardDrawProbability = gameState.activePlayer.deckCards.count { iterCard ->
-            iterCard.name == it.name
-        } / gameState.activePlayer.deckCards.size.toFloat()
-        cardToDrawProbability[it] = cardDrawProbability
-    }
-
-    cardToDrawProbability.forEach { card, probability ->
-        val index = gameState.activePlayer.takeCardFromDeck(card)
-        val gameStateAfterDraw = gameState.deepCopy()
-        gameState.activePlayer.returnCardToDeck(card, index)
-
-        val drawNode = CardDrawingNode(probability, gameStateAfterDraw, listOf(), parentNode)
-        val drawNodeChildren = generatePossibleEndTurnGameStates(drawNode, gameStateAfterDraw)
-        drawNode.childNodes = drawNodeChildren
-
-        possibleEndStateNodes.add(drawNode)
-    }
-
-    if (cardToDrawProbability.isEmpty()) {
-        val punishmentNode = CardDrawingNode(1f, gameState.deepCopy(), listOf(), parentNode)
-        punishPlayerWithEmptyDeck(punishmentNode.gameState.activePlayer)
-        val punishmentNodeChildren = generatePossibleEndTurnGameStates(punishmentNode, punishmentNode.gameState)
-        punishmentNode.childNodes = punishmentNodeChildren
-        possibleEndStateNodes.add(punishmentNode)
-    }
-
-    return possibleEndStateNodes
-}
-
-private fun generatePossibleEndTurnGameStates(parentNode: Node? = null, stateAfterCardDraw: GameState): MutableList<Node> {
-    val endStatesSet = HashSet<GameState>()
-    generateTurnTransitionalStates(endStatesSet, stateAfterCardDraw)
-
-    return endStatesSet.map {
-        Node(it, LinkedList(), parentNode)
-    }.toMutableList()
-}
-
-private fun generateTurnTransitionalStates(leafStatesSet: MutableSet<GameState>, currentGameState: GameState) {
-    with(currentGameState) {
-        activePlayer.getAvailableActions(getOpponent(activePlayer)).forEach {
-            if (it is EndTurn) {
-                it.resolve(currentGameState)
-                if (!leafStatesSet.contains(currentGameState)){
-                    leafStatesSet.add(currentGameState.deepCopy())
-                }
-                it.rollback(currentGameState)
-            } else {
-                it.resolve(currentGameState)
-                generateTurnTransitionalStates(leafStatesSet, currentGameState)
-                it.rollback(currentGameState)
-            }
-        }
-    }
 }
