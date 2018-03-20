@@ -17,8 +17,8 @@ import kotlin.math.sqrt
  * Created by r.makowiecki on 07/03/2018.
  */
 
-const val TURN_TIME_MILLIS = 7500L
-const val MAGIC_C = 0.5f
+const val TURN_TIME_MILLIS = 5000L
+const val MAGIC_C = 1.44f
 
 class ProbabilisticAgent(private val gameTree: GameTree) : Agent() {
 
@@ -33,7 +33,7 @@ class ProbabilisticAgent(private val gameTree: GameTree) : Agent() {
         }
 
         val playoutsSoFar = gameTree.rootNode.gamesPlayed
-        println("Playouts so far: $playoutsSoFar")
+//        println("Playouts so far: $playoutsSoFar")
         while (System.currentTimeMillis() < startTime + TURN_TIME_MILLIS) {
             val promisingChild = selectPromisingChild(gameTree.rootNode)
             val simulationResult = simulate(promisingChild)
@@ -41,15 +41,15 @@ class ProbabilisticAgent(private val gameTree: GameTree) : Agent() {
         }
 
         val playoutsAfterTurn = gameTree.rootNode.gamesPlayed
-        println("Playouts after this turn: $playoutsAfterTurn (delta = ${playoutsAfterTurn - playoutsSoFar})")
+//        println("Playouts after this turn: $playoutsAfterTurn (delta = ${playoutsAfterTurn - playoutsSoFar})")
 //        println("Childs:")
 //        gameTree.rootNode.childNodes.forEach {
 //            println(it.getNodeInfo())
 //        }
 
         val bestChildren = findBestChild(currentNode, 0f)
-        println("BestChildren:")
-        println(bestChildren.getNodeInfo())
+//        println("BestChildren:")
+//        println(bestChildren.getNodeInfo())
         gameTree.updateRoot(bestChildren)
 
         return emptyList()

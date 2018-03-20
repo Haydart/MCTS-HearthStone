@@ -2,6 +2,7 @@ import actions.CardAction
 import actions.HealAll
 import actions.HitAllEnemies
 import actions.HitOne
+import greedy_agents.RandomGreedyAgent
 import models.AdherentCard
 import models.Card
 import models.Player
@@ -61,7 +62,7 @@ fun main(args: Array<String>) {
         }
         GameMode.MCTS_QUALITY_TEST -> {
             (0..1).forEach {
-                TestGame(GameState(player1, player2, turnNumber = 1, activePlayer = player1)).run()
+                MctsTestGame(GameState(player1, player2, turnNumber = 1, activePlayer = player1), RandomGreedyAgent(), false).run()
             }
         }
     }
