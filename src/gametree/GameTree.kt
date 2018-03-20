@@ -54,7 +54,7 @@ open class Node(
 }
 
 class CardDrawingNode(
-        val nodeOccurenceProbability: Float,
+        private val nodeOccurenceProbability: Float,
         gameState: GameState,
         childNodes: List<Node>,
         parentNode: Node? = null,

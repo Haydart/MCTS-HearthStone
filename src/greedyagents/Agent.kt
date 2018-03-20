@@ -1,4 +1,4 @@
-package greedy_agents
+package greedyagents
 
 import GameState
 import actions.Action

@@ -1,4 +1,4 @@
-package greedy_agents
+package greedyagents
 
 import GameState
 import actions.Action
@@ -18,7 +18,7 @@ class RandomGreedyAgent : Agent() {
         Collections.shuffle(keyList)
         val movesToPerform = gameStateToActionsListMap[keyList[0]]!!
 
-        println("Moves to perform: $movesToPerform")
+//        println("Moves to perform: $movesToPerform")
 
         movesToPerform.forEach { it.resolve(globalGameStateAfterCardDrawing) }
         return movesToPerform

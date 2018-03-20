@@ -1,12 +1,12 @@
 import gametree.GameTree
 import gametree.Node
-import greedy_agents.Agent
-import mcts_agent.ProbabilisticAgent
+import greedyagents.Agent
+import mctsagent.ProbabilisticAgent
 import models.Player
 
 private const val PUNISHMENT_VALUE = 2
 
-class MctsTestGame(gameState: GameState, enemyAgent: Agent, mctsFirst: Boolean) {
+class MctsTestGame(gameState: GameState, enemyAgent: Agent, private val mctsFirst: Boolean) {
 
     private val gameTree = GameTree(Node(gameState, listOf(), null))
 
@@ -30,20 +30,28 @@ class MctsTestGame(gameState: GameState, enemyAgent: Agent, mctsFirst: Boolean) 
     private fun getCurrentState(): GameState = gameTree.rootNode.gameState
 
     fun run() {
+        printSimulationStartInfo()
+
         player1Controller = agent1
         player2Controller = agent2
 
         while (!gameEndConditionsMet(getCurrentState())) {
             performTurn(getCurrentState().activePlayer)
-            println(getCurrentState())
-
-            println("______________________________")
+            print(".")
         }
 
         val winningPlayer = if (getCurrentState().player1.healthPoints < getCurrentState().player2.healthPoints) getCurrentState().player2 else getCurrentState().player1
         println("Game end, the winning player is \n$winningPlayer")
 
         println(getCurrentState())
+    }
+
+    private fun printSimulationStartInfo() {
+        if (mctsFirst) {
+            println("MCTS first, enemy: ${agent2.javaClass.simpleName}")
+        } else {
+            println("MCTS second, enemy: ${agent1.javaClass.simpleName}")
+        }
     }
 
     private fun performTurn(currentPlayer: Player) {
@@ -54,7 +62,6 @@ class MctsTestGame(gameState: GameState, enemyAgent: Agent, mctsFirst: Boolean) 
         }
 
         drawCardOrGetPunished(currentPlayer)
-        println(gameTree.rootNode.getNodeInfo())
 
         // resolve tree
         val newRootNode: Node? = gameTree.rootNode.childNodes.find {
@@ -98,9 +105,4 @@ class MctsTestGame(gameState: GameState, enemyAgent: Agent, mctsFirst: Boolean) 
         player.turnsWithDeckCardsDepleted++
         player.healthPoints -= player.turnsWithDeckCardsDepleted * PUNISHMENT_VALUE
     }
-}
-
-private fun punishPlayerWithEmptyDeck(player: Player) {
-    player.turnsWithDeckCardsDepleted++
-    player.healthPoints -= player.turnsWithDeckCardsDepleted * PUNISHMENT_VALUE
 }

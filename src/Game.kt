@@ -2,9 +2,9 @@ import actions.EndTurn
 import gametree.CardDrawingNode
 import gametree.GameTree
 import gametree.Node
-import greedy_agents.Agent
-import greedy_agents.ControllingGreedyAgent
-import mcts_agent.ProbabilisticAgent
+import greedyagents.Agent
+import greedyagents.ControllingGreedyAgent
+import mctsagent.ProbabilisticAgent
 import models.*
 import java.util.*
 import kotlin.collections.HashSet

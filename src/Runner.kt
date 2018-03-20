@@ -2,7 +2,9 @@ import actions.CardAction
 import actions.HealAll
 import actions.HitAllEnemies
 import actions.HitOne
-import greedy_agents.RandomGreedyAgent
+import greedyagents.AggressiveGreedyAgent
+import greedyagents.ControllingGreedyAgent
+import greedyagents.RandomGreedyAgent
 import models.AdherentCard
 import models.Card
 import models.Player
@@ -30,7 +32,7 @@ fun main(args: Array<String>) {
             createInitialDeck(),
             mutableListOf(),
             healthPoints = 20,
-            name = "Random agent",
+            name = "player1",
             turnsWithDeckCardsDepleted = 0,
             discardedCount = 0
     )
@@ -40,7 +42,7 @@ fun main(args: Array<String>) {
             createInitialDeck(),
             mutableListOf(),
             healthPoints = 20,
-            name = "MCTS agent",
+            name = "player2",
             turnsWithDeckCardsDepleted = 0,
             discardedCount = 0
     )
@@ -61,8 +63,25 @@ fun main(args: Array<String>) {
             gameInstance.runMCTSPerformanceTest()
         }
         GameMode.MCTS_QUALITY_TEST -> {
-            (0..1).forEach {
+            (0..25).forEach {
+                val startTime = System.currentTimeMillis()
                 MctsTestGame(GameState(player1, player2, turnNumber = 1, activePlayer = player1), RandomGreedyAgent(), false).run()
+                print("Game took ${(System.currentTimeMillis() - startTime) / 1000} seconds")
+            }
+            (0..25).forEach {
+                MctsTestGame(GameState(player1, player2, turnNumber = 1, activePlayer = player1), RandomGreedyAgent(), true).run()
+            }
+            (0..25).forEach {
+                MctsTestGame(GameState(player1, player2, turnNumber = 1, activePlayer = player1), ControllingGreedyAgent(), false).run()
+            }
+            (0..25).forEach {
+                MctsTestGame(GameState(player1, player2, turnNumber = 1, activePlayer = player1), ControllingGreedyAgent(), true).run()
+            }
+            (0..25).forEach {
+                MctsTestGame(GameState(player1, player2, turnNumber = 1, activePlayer = player1), AggressiveGreedyAgent(), false).run()
+            }
+            (0..25).forEach {
+                MctsTestGame(GameState(player1, player2, turnNumber = 1, activePlayer = player1), AggressiveGreedyAgent(), true).run()
             }
         }
     }

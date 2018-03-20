@@ -1,4 +1,4 @@
-package mcts_agent
+package mctsagent
 
 import GameState
 import actions.Action
@@ -8,7 +8,7 @@ import gameEndConditionsMet
 import gametree.GameTree
 import gametree.Node
 import generateCardDrawPossibleStates
-import greedy_agents.Agent
+import greedyagents.Agent
 import models.getRandomElement
 import kotlin.math.ln
 import kotlin.math.sqrt
@@ -26,11 +26,11 @@ class ProbabilisticAgent(private val gameTree: GameTree) : Agent() {
         val currentNode = gameTree.rootNode
         val startTime = System.currentTimeMillis()
 
-        val state = currentNode.gameState;
-        val avActions = state.activePlayer.getAvailableActions(state.getOpponent(state.activePlayer))
-        avActions.forEach {
-            println(it)
-        }
+        val state = currentNode.gameState
+        val availableActions = state.activePlayer.getAvailableActions(state.getOpponent(state.activePlayer))
+//        availableActions.forEach {
+//            println(it)
+//        }
 
         val playoutsSoFar = gameTree.rootNode.gamesPlayed
 //        println("Playouts so far: $playoutsSoFar")

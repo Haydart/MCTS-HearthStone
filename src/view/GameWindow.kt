@@ -3,10 +3,10 @@ package view
 import GameState
 import actions.*
 import gGameInstance
-import greedy_agents.AggressiveGreedyAgent
-import greedy_agents.ControllingGreedyAgent
-import greedy_agents.Agent
-import greedy_agents.RandomGreedyAgent
+import greedyagents.Agent
+import greedyagents.AggressiveGreedyAgent
+import greedyagents.ControllingGreedyAgent
+import greedyagents.RandomGreedyAgent
 import javafx.application.Application
 import javafx.event.EventHandler
 import javafx.geometry.Pos
@@ -21,7 +21,7 @@ import javafx.scene.layout.VBox
 import javafx.scene.shape.Circle
 import javafx.scene.text.Text
 import javafx.stage.Stage
-import mcts_agent.ProbabilisticAgent
+import mctsagent.ProbabilisticAgent
 import models.Card
 import models.Player
 import pop
@@ -125,12 +125,12 @@ class GameWindow: Application() {
                             // do nothing
                         }
                         ProbabilisticAgent::class.simpleName -> {
-                            val kClass = Class.forName("mcts_agent." + controllerClassName).kotlin
+                            val kClass = Class.forName("mctsagent." + controllerClassName).kotlin
                             println(kClass)
                             newController = (kClass.createInstance() as Agent)
                         }
                         else -> {
-                            val kClass = Class.forName("greedy_agents." + controllerClassName).kotlin
+                            val kClass = Class.forName("greedyagents." + controllerClassName).kotlin
                             println(kClass)
                             newController = (kClass.createInstance() as Agent)
                         }
