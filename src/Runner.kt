@@ -17,7 +17,8 @@ var gGameInstance: Game? = null
 
 enum class GameMode {
     TEXT,
-    GUI
+    GUI,
+    TEST_PERF
 }
 
 fun main(args: Array<String>) {
@@ -53,6 +54,9 @@ fun main(args: Array<String>) {
         GameMode.GUI -> {
             val gameWindow = GameWindow()
             gameWindow.launchWindow(args)
+        }
+        GameMode.TEST_PERF -> {
+            gameInstance.runMCTSPerformanceTest()
         }
     }
 }
