@@ -26,9 +26,12 @@ data class AdherentCard(
         val maxHealthPoints: Int,
         var attackStrength: Int,
         var hasBeenUsedInCurrentTurn: Boolean = false,
+        var hasChargeAbility: Boolean = false,
+        var hasProvocationAbility: Boolean = false,
         private val cardName: String,
-        private val cardManaCost: Int
-) : Card(cardName, cardManaCost, defaultAdherentActionsFun) {
+        private val cardManaCost: Int,
+        private val actionsFun: (Card, Player, Player) -> List<CardAction> = defaultAdherentActionsFun
+) : Card(cardName, cardManaCost, actionsFun) {
 
     var currentHealthPoints: Int = maxHealthPoints
 

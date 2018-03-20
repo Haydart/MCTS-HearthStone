@@ -78,10 +78,6 @@ abstract class SpellCardAction : CardAction() {
 
 class PlaceAdherentCard(override val triggeringCard: AdherentCard) : AdherentCardAction() {
 
-    init {
-        if (triggeringCard !is AdherentCard) throw IllegalAccessException("PlaceAdherentCard can only be the action of an adherent card.")
-    }
-
     var removedAtIndex = -1
 
     override fun resolve(gameState: GameState) {
@@ -90,7 +86,9 @@ class PlaceAdherentCard(override val triggeringCard: AdherentCard) : AdherentCar
             tableCards.add(triggeringCard)
             removedAtIndex = handCards.indexOfExact(triggeringCard)
             handCards.removeAt(removedAtIndex)
-            triggeringCard.hasBeenUsedInCurrentTurn = true
+            if (!triggeringCard.hasChargeAbility) {
+                triggeringCard.hasBeenUsedInCurrentTurn = true
+            }
         }
     }
 
