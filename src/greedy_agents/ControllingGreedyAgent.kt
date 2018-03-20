@@ -23,12 +23,12 @@ class ControllingGreedyAgent : Agent() {
         lateinit var movesToPerform: List<Action>
 
         gameStateActionsListMap.forEach { gameState, actionsList ->
-            println(gameState)
-            println("\t\t$actionsList")
+            //            println(gameState)
+//            println("\t\t$actionsList")
 
             val evaluation = evaluateGameState(gameState)
-            println("this state was evaluated at $evaluation points")
-            println("")
+//            println("this state was evaluated at $evaluation points")
+//            println("")
 
             if (evaluation > bestEvaluationSoFar) {
                 bestEvaluationSoFar = evaluation

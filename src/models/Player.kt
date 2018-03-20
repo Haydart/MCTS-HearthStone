@@ -96,6 +96,12 @@ data class Player(
 
     override fun toString() = "$name deckCards(${deckCards.size}), handCards(${handCards.size}), tableCards(${tableCards.size}), " +
             "discardedCards($discardedCount), HP($healthPoints), mana($mana)"
+
+
+    override fun hashCode(): Int {
+        //return (((((((if (this.handCards != null) this.handCards.hashCode() else 0) * 31 + if (this.deckCards != null) this.deckCards.hashCode() else 0) * 31 + if (this.tableCards != null) this.tableCards.hashCode() else 0) * 31 + this.healthPoints) * 31 + this.mana) * 31 + if (this.name != null) this.name.hashCode() else 0) * 31 + this.turnsWithDeckCardsDepleted) * 31 + this.discardedCount
+        return (((((((if (this.handCards != null) this.handCards.sumBy { it.hashCode() } else 0) * 31 + if (this.deckCards != null) this.deckCards.sumBy { it.hashCode() } else 0) * 31 + if (this.tableCards != null) this.tableCards.sumBy { it.hashCode() } else 0) * 31 + this.healthPoints) * 31 + this.mana) * 31 + if (this.name != null) this.name.hashCode() else 0) * 31 + this.turnsWithDeckCardsDepleted) * 31 + this.discardedCount
+    }
 }
 
 fun <E> MutableList<E>.popRandomElement() = removeAt(Random().nextInt(size))

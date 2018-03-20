@@ -3,24 +3,19 @@ import gametree.CardDrawingNode
 import gametree.GameTree
 import gametree.Node
 import greedy_agents.Agent
-import greedy_agents.RandomGreedyAgent
+import greedy_agents.ControllingGreedyAgent
 import mcts_agent.ProbabilisticAgent
 import models.*
 import java.util.*
+import kotlin.collections.HashSet
 
 const val PUNISHMENT_VALUE = 2
 
 class Game(gameState: GameState) {
 
-    private val initialRootNode = Node(
-            gameState,
-            listOf(),
-            null
-    )
+    private val gameTree = GameTree(Node(gameState, listOf(), null))
 
-    private val gameTree = GameTree(initialRootNode)
-
-    private val randomAgent = RandomGreedyAgent()
+    private val randomAgent = ControllingGreedyAgent()
     private val greedyAgent = ProbabilisticAgent(gameTree)
 
     private var player1Controller: Agent? = null
@@ -30,7 +25,7 @@ class Game(gameState: GameState) {
         (0 until 3).forEach { gameState.player1.takeCardFromDeck() }
         (0 until 4).forEach { gameState.player2.takeCardFromDeck() }
 
-        initialRootNode.childNodes = generateCardDrawPossibleStates(initialRootNode, gameState)
+        gameTree.rootNode.childNodes = generateCardDrawPossibleStates(gameTree.rootNode, gameState)
     }
 
     fun getActivePlayerController(gameState: GameState): Agent? {
@@ -45,28 +40,177 @@ class Game(gameState: GameState) {
         }
     }
 
-    fun run() {
-        with(gameTree.rootNode.gameState) {
-            player1Controller = randomAgent
-            player2Controller = greedyAgent
+    fun getCurrentState(): GameState = gameTree.rootNode.gameState
 
-            while (!gameEndConditionsMet(this)) {
-                performTurn(activePlayer)
+    fun runMCTSPerformanceTest() {
+        val mctsAgent = ProbabilisticAgent(gameTree)
+        val initialGameState = gameTree.rootNode.gameState
 
-                println("Game state after ${activePlayer.name} turn: ")
-                println(this)
-                println("______________________________")
+        // simulate first draw
+        drawCardOrGetPunished(initialGameState.activePlayer)
+
+        // move root to node after first draw
+        val newRootNode: Node? = gameTree.rootNode.childNodes.find {
+            val hC1 = it.gameState.activePlayer.deckCards.sumBy {
+                it.hashCode()
             }
-
-            val winningPlayer = if (player1.healthPoints < player2.healthPoints) player2 else player1
-            println("Game end, the winning player is \n$winningPlayer")
+            val hC2 = gameTree.rootNode.gameState.activePlayer.deckCards.sumBy {
+                it.hashCode()
+            }
+            hC1 == hC2
         }
-        println(this)
+
+        if (newRootNode != null) {
+            println("!!! New root node found after draw !!!")
+            gameTree.updateRoot(newRootNode)
+
+            printMCTSStatistics(newRootNode)
+            // perform turn
+            mctsAgent.performTurn(gameTree.rootNode.gameState)
+
+            printMCTSStatistics(newRootNode)
+
+
+
+        } else {
+            println("!!! Not found new node after draw !!!")
+        }
+
+    }
+
+    fun printMCTSStatistics(rootNode: Node) {
+        val leafsDepthList = mutableListOf<Int>()
+        val simChildsPart = mutableListOf<Float>()
+        val childNodesCount = collectNodeStatsRecursive(rootNode, 1, leafsDepthList, simChildsPart)
+        println("Child nodes count:" + childNodesCount)
+        val leafsCount = leafsDepthList.size
+        println("Leafs count: " + leafsCount)
+        println(leafsDepthList)
+        val leafsDepthAvg = leafsDepthList.average()
+        println("Leafs average depth: " + leafsDepthAvg)
+        leafsDepthList.sort()
+        println(leafsDepthList)
+        val leafsDepthMedian = leafsDepthList.get(leafsDepthList.size / 2)
+        println("Leafs depth median: " + leafsDepthMedian)
+        val leafsMinDepth = leafsDepthList.min()
+        println("Leafs min depth: " + leafsMinDepth)
+        val leafsMaxDepth = leafsDepthList.max()
+        println("Leafs max depth: " + leafsMaxDepth)
+        val nodesWithSimChildsCount = simChildsPart.count { it > 0 }
+        println("Count of nodes with simulated childs (at least one): " + nodesWithSimChildsCount)
+        val averagePartOfSim = simChildsPart.average()
+        println("Average % of simulations per child: " + averagePartOfSim)
+        val minPartOfSim = simChildsPart.min()
+        println("Min % of simulations per childs: " + minPartOfSim)
+        val maxPartOfSim = simChildsPart.max()
+        println("Max % of simulations per childs: " + maxPartOfSim)
+        println(simChildsPart.sort())
+        println(simChildsPart)
+        val medianPartOfSim = simChildsPart.get(simChildsPart.size / 2)
+        println("Median % of simulations per childs: " + medianPartOfSim)
+        val playoutsCount = rootNode.gamesPlayed
+        println("Total simulations count: " + playoutsCount)
+
+        // print in csv format
+        println("tot_sim,tot_nodes,leaf_count,leaf_depth_avg,leaf_depth_med,leaf_depth_min,leaf_depth_max,has_sim_child,sim_child_pct_avg,sim_child_pct_med,sim_child_pct_min,sim_child_pct_max")
+        println("$playoutsCount,$childNodesCount,$leafsCount,$leafsDepthAvg,$leafsDepthMedian,$leafsMinDepth,$leafsMaxDepth,$nodesWithSimChildsCount,$averagePartOfSim,$medianPartOfSim,$minPartOfSim,$maxPartOfSim")
+    }
+
+    fun collectNodeStatsRecursive(currNode: Node, depth: Int, leafsDepthList: MutableList<Int>, simChildsPart: MutableList<Float>): Int {
+        var childNodesCount = 0
+        if (currNode.childNodes.isEmpty()) {
+            leafsDepthList.add(depth / 2) // Draw Node + Turn Node are calculated as once
+        } else {
+            var simulatedChildsCount = 0
+            currNode.childNodes.forEach {
+                childNodesCount += collectNodeStatsRecursive(it, depth + 1, leafsDepthList, simChildsPart)
+                if (currNode is CardDrawingNode && it.gamesPlayed > 0) {
+                    simulatedChildsCount += 1
+                }
+            }
+            simChildsPart.add(simulatedChildsCount.toFloat() / currNode.childNodes.size)
+            childNodesCount += currNode.childNodes.size
+        }
+        return childNodesCount
+    }
+
+    fun run() {
+        player1Controller = randomAgent
+        player2Controller = greedyAgent
+
+        //val initialTreeRoot = gameTree.rootNode
+
+        while (!gameEndConditionsMet(getCurrentState())) {
+            println("Turn of ${getCurrentState().activePlayer.name}")
+            println("Game state before ${getCurrentState().activePlayer.name} turn: ")
+            println(getCurrentState())
+            println("...")
+            println("Game state after ${getCurrentState().activePlayer.name} turn: ")
+            performTurn(getCurrentState().activePlayer)
+            println(getCurrentState())
+
+            //println(initialTreeRoot.printTree(0))
+
+            println("______________________________")
+        }
+
+        val winningPlayer = if (getCurrentState().player1.healthPoints < getCurrentState().player2.healthPoints) getCurrentState().player2 else getCurrentState().player1
+        println("Game end, the winning player is \n$winningPlayer")
+
+        println(getCurrentState())
     }
 
     private fun performTurn(currentPlayer: Player) {
+
+        if (getActivePlayerController(getCurrentState()) is ProbabilisticAgent) {
+            if (gameTree.rootNode.childNodes.size <= 0) {
+                println("!!! Force tree generation !!!")
+                gameTree.rootNode.childNodes = generateCardDrawPossibleStates(gameTree.rootNode, getCurrentState())
+            }
+        }
+
         drawCardOrGetPunished(currentPlayer)
-        getActivePlayerController(gameTree.rootNode.gameState)?.performTurn(gameTree.rootNode.gameState)
+        println(gameTree.rootNode.getNodeInfo())
+
+        // resolve tree
+        val newRootNode: Node? = gameTree.rootNode.childNodes.find {
+            val hC1 = it.gameState.activePlayer.deckCards.sumBy {
+                it.hashCode()
+            }
+            val hC2 = gameTree.rootNode.gameState.activePlayer.deckCards.sumBy {
+                it.hashCode()
+            }
+            hC1 == hC2
+        }
+
+        if (newRootNode != null) {
+            println("!!! New root node found after draw !!!")
+            gameTree.updateRoot(newRootNode)
+            println(gameTree.rootNode.getNodeInfo())
+        } else {
+            println("!!! Not found new node after draw !!!")
+        }
+
+        //println(gameTree.rootNode.getNodeInfo())
+
+        val notMCTS: Boolean = (getActivePlayerController(getCurrentState()) !is ProbabilisticAgent)
+
+        getActivePlayerController(getCurrentState())?.performTurn(getCurrentState())
+
+        if (notMCTS) {
+            // resolve tree
+            val newRootNode: Node? = gameTree.rootNode.childNodes.find {
+                it.gameState == gameTree.rootNode.gameState
+            }
+
+            if (newRootNode != null) {
+                println("!!! New root node found after turn !!!")
+                gameTree.updateRoot(newRootNode)
+            } else {
+                println("!!! Not found new node after turn !!!")
+            }
+        }
+        println(gameTree.rootNode.getNodeInfo())
     }
 
     fun drawCardOrGetPunished(currentPlayer: Player) {
@@ -178,23 +322,26 @@ fun generateCardDrawPossibleStates(parentNode: Node? = null, gameState: GameStat
 }
 
 private fun generatePossibleEndTurnGameStates(parentNode: Node? = null, stateAfterCardDraw: GameState): MutableList<Node> {
-    val endStatesList = LinkedList<GameState>()
-    generateTurnTransitionalStates(endStatesList, stateAfterCardDraw)
-    return endStatesList.map {
+    val endStatesSet = HashSet<GameState>()
+    generateTurnTransitionalStates(endStatesSet, stateAfterCardDraw)
+
+    return endStatesSet.map {
         Node(it, LinkedList(), parentNode)
     }.toMutableList()
 }
 
-private fun generateTurnTransitionalStates(leafStatesList: MutableList<GameState>, currentGameState: GameState) {
+private fun generateTurnTransitionalStates(leafStatesSet: MutableSet<GameState>, currentGameState: GameState) {
     with(currentGameState) {
         activePlayer.getAvailableActions(getOpponent(activePlayer)).forEach {
             if (it is EndTurn) {
                 it.resolve(currentGameState)
-                leafStatesList.add(currentGameState.deepCopy())
+                if (!leafStatesSet.contains(currentGameState)){
+                    leafStatesSet.add(currentGameState.deepCopy())
+                }
                 it.rollback(currentGameState)
             } else {
                 it.resolve(currentGameState)
-                generateTurnTransitionalStates(leafStatesList, currentGameState)
+                generateTurnTransitionalStates(leafStatesSet, currentGameState)
                 it.rollback(currentGameState)
             }
         }
