@@ -46,7 +46,7 @@ fun main(args: Array<String>) {
     val gameInstance = Game(GameState(player1, player2, turnNumber = 1, activePlayer = player1))
     gGameInstance = gameInstance
 
-    val gameMode = GameMode.TEXT
+    val gameMode = GameMode.GUI
     when (gameMode) {
         GameMode.TEXT -> {
             gameInstance.run()
@@ -91,6 +91,3 @@ val flameLanceEffect: (Card, Player, Player) -> List<CardAction> = { triggeringC
     }
     actionList
 }
-
-
-

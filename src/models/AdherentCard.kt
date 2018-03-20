@@ -13,10 +13,21 @@ val defaultAdherentActionsFun: (Card, Player, Player) -> List<CardAction> = { tr
     if (handCards.containsExact(triggeringCard)) {
         availableActions += PlaceAdherentCard(triggeringCard)
     } else if (tableCards.containsExact(triggeringCard) && !triggeringCard.hasBeenUsedInCurrentTurn) {
-        enemyPlayer.tableCards.forEach { enemyCard ->
-            availableActions += FightAnotherAdherent(triggeringCard, enemyCard)
+
+        val enemyTableProvocationAdherents = enemyPlayer
+                .tableCards
+                .filter { it.hasProvocationAbility }
+
+        if (enemyTableProvocationAdherents.isEmpty()) {
+            enemyPlayer.tableCards.forEach { enemyCard ->
+                availableActions += FightAnotherAdherent(triggeringCard, enemyCard)
+            }
+            availableActions += FightEnemyHero(triggeringCard)
+        } else {
+            enemyTableProvocationAdherents.forEach { enemyProvocationCard ->
+                availableActions += FightAnotherAdherent(triggeringCard, enemyProvocationCard)
+            }
         }
-        availableActions += FightEnemyHero(triggeringCard)
     }
 
     availableActions
