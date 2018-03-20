@@ -20,6 +20,13 @@ import kotlin.math.sqrt
 const val TURN_TIME_MILLIS = 7500L
 const val MAGIC_C = 0.5f
 
+private const val HP_WEIGHT = 1f
+private const val OWN_ADHERENT_COUNT_WEIGHT = 2
+private const val ENEMY_ADHERENT_COUNT_WEIGHT = 20
+private const val ATTACK_SUM_WEIGHT = 3
+private const val HAND_SIZE_WEIGHT = 1
+private const val ADHERENT_HP_SUM_WEIGHT = 2
+
 class ProbabilisticAgent(private val gameTree: GameTree) : Agent() {
 
     override fun performTurn(globalGameStateAfterCardDrawing: GameState): List<Action> {
@@ -125,12 +132,44 @@ class ProbabilisticAgent(private val gameTree: GameTree) : Agent() {
         var playerEndedTurn = false
 
         while (!playerEndedTurn) {
-            val randomAction = gameState.activePlayer.getAvailableActions(enemyPlayer).getRandomElement()
-            randomAction.resolve(gameState)
+            val actions = gameState.activePlayer.getAvailableActions(enemyPlayer)
 
-            if (randomAction is EndTurn) {
+            val chosenAction = getBestMove(actions, gameState)
+
+            chosenAction.resolve(gameState)
+
+            if (chosenAction is EndTurn) {
                 playerEndedTurn = true
             }
+        }
+    }
+
+    private fun getBestMove(actions: List<Action>, gameState: GameState): Action {
+        var bestAction = actions[0]
+        var bestEvaluation = -Float.MIN_VALUE
+
+        actions.forEach { currentAction ->
+            currentAction.resolve(gameState)
+            val currentActionEvaluation = evaluateGameState(gameState)
+            currentAction.rollback(gameState)
+
+            if (currentActionEvaluation > bestEvaluation) {
+                bestEvaluation = currentActionEvaluation
+                bestAction = currentAction
+            }
+        }
+
+        return bestAction
+    }
+
+    private fun evaluateGameState(gameState: GameState): Float {
+        return with(gameState) {
+            val enemyPlayer = getOpponent(activePlayer)
+            (activePlayer.healthPoints - enemyPlayer.healthPoints) * HP_WEIGHT +
+                    activePlayer.tableCards.size * OWN_ADHERENT_COUNT_WEIGHT - enemyPlayer.tableCards.size * ENEMY_ADHERENT_COUNT_WEIGHT +
+                    (activePlayer.tableCards.sumBy { it.attackStrength } - enemyPlayer.tableCards.sumBy { it.attackStrength }) * ATTACK_SUM_WEIGHT +
+                    (activePlayer.handCards.size - enemyPlayer.handCards.size) * HAND_SIZE_WEIGHT +
+                    (activePlayer.tableCards.sumBy { it.currentHealthPoints } - enemyPlayer.tableCards.sumBy { it.currentHealthPoints }) * ADHERENT_HP_SUM_WEIGHT
         }
     }
 }

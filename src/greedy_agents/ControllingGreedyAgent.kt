@@ -23,12 +23,7 @@ class ControllingGreedyAgent : Agent() {
         lateinit var movesToPerform: List<Action>
 
         gameStateActionsListMap.forEach { gameState, actionsList ->
-            //            println(gameState)
-//            println("\t\t$actionsList")
-
             val evaluation = evaluateGameState(gameState)
-//            println("this state was evaluated at $evaluation points")
-//            println("")
 
             if (evaluation > bestEvaluationSoFar) {
                 bestEvaluationSoFar = evaluation
@@ -42,7 +37,7 @@ class ControllingGreedyAgent : Agent() {
         return movesToPerform
     }
 
-    fun evaluateGameState(gameState: GameState): Float {
+    private fun evaluateGameState(gameState: GameState): Float {
         return with(gameState) {
             val enemyPlayer = getOpponent(activePlayer)
             (activePlayer.healthPoints - enemyPlayer.healthPoints) * HP_WEIGHT +
